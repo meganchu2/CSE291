@@ -1,0 +1,7 @@
+
+#!/bin/bash
+
+PYTHONPATH="thirdparty/z3/build/python":"thirdparty/libeusolver/build":$PYTHONPATH python src/benchmarks.py $@
+
+# EOF
+
