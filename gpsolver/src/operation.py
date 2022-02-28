@@ -8,18 +8,22 @@ from program import NTNode, Node, is_terminal
 MAX_DEPTH = 32
 
 def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
+    node = root
     queue = [root]
     while queue:
         node = queue.pop(0)
-        rules = g.terminal_rules[node.nt_name] if node.depth == max_depth - 1 else g.all_rules[node.nt_name]
+        print(node.to_dict())
+        rules = g.all_rules[node.nt_name] if node.depth < max_depth - 1 else g.terminal_rules[node.nt_name]
         if not rules:
             continue
         node = node.apply(random.choice(rules))
         queue += node.children
+    while node.parent:
+        node = node.parent
 
-    if not is_terminal(root):
+    if not is_terminal(node):
         return generate_program(g, max_depth)
-    return root
+    return node
 
 # note that we do not want to pick the root node
 def get_nodes(root: Node) -> List[Node]:
