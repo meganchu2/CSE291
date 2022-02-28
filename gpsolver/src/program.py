@@ -2,10 +2,10 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from grammar import Production
+import grammar
 
 class Node:
-    def __init__(self, expr_type: int) -> None:
+    def __init__(self, expr_type: str) -> None:
         self.parent = None
         self.children = []
         self.node_type = 0
@@ -20,21 +20,23 @@ class Node:
     def to_dict(self) -> dict[str, Any]:
         return {"node_type": self.node_type, "expr_type": self.expr_type, "depth": self.depth, "id": self.id}
 
-    def apply(self, rule: Production) -> Node:
+    def apply(self, rule: grammar.Production) -> Node:
         assert self.__eq__(rule.lhs)
         new = deepcopy(rule.rhs)
         new.id = self.id
         new.parent = self.parent
         new.revert = self.to_dict()
+        new.depth = self.depth
         for i, c in enumerate(new.children):
             c.parent = new
             c.id = new.id + str(i)
+            c.depth = self.depth + 1
         if self.parent:
             self.parent.children[int(self.id[-1])] = new
         return new
 
 class VarNode(Node):
-    def __init__(self, var_name: str, expr_type: int) -> None:
+    def __init__(self, var_name: str, expr_type: str) -> None:
         super().__init__(expr_type)
         self.node_type = 1
         self.name = var_name
@@ -48,7 +50,7 @@ class VarNode(Node):
         return d
 
 class ConstNode(Node):
-    def __init__(self, expr_type: int, value: Any) -> None:
+    def __init__(self, expr_type: str, value: Any) -> None:
         super().__init__(expr_type)
         self.node_type = 2
         self.value = value
@@ -62,7 +64,7 @@ class ConstNode(Node):
         return d
 
 class FuncNode(Node):
-    def __init__(self, func_name: str, expr_type: int) -> None:
+    def __init__(self, func_name: str, expr_type: str) -> None:
         super().__init__(expr_type)
         self.node_type = 3
         self.func_name = func_name
@@ -76,7 +78,7 @@ class FuncNode(Node):
         return d
 
 class NTNode(Node): # non-terminal
-    def __init__(self, nt_name: str, expr_type: int) -> None:
+    def __init__(self, nt_name: str, expr_type: str) -> None:
         super().__init__(expr_type)
         self.node_type = 4
         self.nt_name = nt_name
