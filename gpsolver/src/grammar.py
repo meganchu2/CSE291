@@ -4,11 +4,6 @@ from typing import List, Any
 from collections import defaultdict
 
 
-class Production:
-    def __init__(self, lhs: NTNode, rhs: Node) -> None:
-        self.lhs = lhs
-        self.rhs = rhs
-
 class Grammar:
     def __init__(self, bmfile: str) -> None:
         li = self.__load_bm_grammar(bmfile)

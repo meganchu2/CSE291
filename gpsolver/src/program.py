@@ -2,7 +2,12 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-import grammar
+
+class Production:
+    def __init__(self, lhs: NTNode, rhs: Node) -> None:
+        self.lhs = lhs
+        self.rhs = rhs
+
 
 class Node:
     def __init__(self, expr_type: str) -> None:
