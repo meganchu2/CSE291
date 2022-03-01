@@ -12,7 +12,7 @@ def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
     queue = [root]
     while queue:
         node = queue.pop(0)
-        print(node.to_dict())
+        # print(node.to_dict())
         rules = g.all_rules[node.nt_name] if node.depth < max_depth - 1 else g.terminal_rules[node.nt_name]
         if not rules:
             continue
