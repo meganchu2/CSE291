@@ -6,6 +6,7 @@ from collections import defaultdict
 
 class Grammar:
     def __init__(self, bmfile: str) -> None:
+
         li = self.__load_bm_grammar(bmfile)
         start = li[0]
         self.start = NTNode(nt_name=start[2][0], expr_type=start[1])
@@ -17,13 +18,13 @@ class Grammar:
             lhs = NTNode(nt_name=r[0], expr_type=r[1])
             for i in r[2]:
                 if isinstance(i, str):
-                    rhs = VarNode(var_name=i, expr_type=lhs.nt_name)
+                    rhs = VarNode(var_name=i, expr_type=lhs.expr_type)
                     self.terminal_rules[lhs.nt_name].append(Production(lhs, rhs))
                 elif isinstance(i, tuple):
                     rhs = ConstNode(expr_type=i[0], value=i[1])
                     self.terminal_rules[lhs.nt_name].append(Production(lhs, rhs))
                 else: # list
-                    rhs = FuncNode(func_name=i[0], expr_type=lhs.nt_name)
+                    rhs = FuncNode(func_name=i[0], expr_type=lhs.expr_type)
                     for j in i[1:]:
                         rhs.children.append(NTNode(nt_name=j, expr_type=type_dict[j]))
                 self.all_rules[lhs.nt_name].append(Production(lhs, rhs))

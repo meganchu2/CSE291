@@ -3,9 +3,9 @@ from copy import copy, deepcopy
 from typing import List, Optional
 
 from grammar import Grammar
-from program import NTNode, Node, is_terminal
+from program import NTNode, Node, is_terminal, print_ast
 
-MAX_DEPTH = 32
+MAX_DEPTH = 4
 
 def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
     node = root
@@ -28,10 +28,10 @@ def get_nodes(root: Node) -> List[Node]:
     return root.children + [n for c in root.children for n in get_nodes(c)]
 
 def get_revertible_nodes(root: Node) -> List[Node]:
-    return root.children + [n for c in root.children for n in get_nodes(c) if n.revert]
+    return [x for x in root.children if x.revert] + [n for c in root.children for n in get_nodes(c) if n.revert]
 
 def get_same_type_nodes(root: Node, expr_type: str) -> List[Node]:
-    return root.children + [n for c in root.children for n in get_nodes(c) if n.expr_type == expr_type]
+    return [x for x in root.children if x.expr_type == expr_type] + [n for c in root.children for n in get_nodes(c) if n.expr_type == expr_type]
 
 def generate_program(g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
     assert max_depth > 0
@@ -56,7 +56,15 @@ def crossover(parents: List[Node]) -> Optional[Node]:
     if not nodes:
         return None
     node = random.choice(nodes)
+    # print("Base expression", print_ast(node), node.expr_type)
+
     matches = get_same_type_nodes(new_program2, node.expr_type)
+
+    # i = 1
+    # for match in matches:
+    #     print("Match", i, print_ast(match), match.expr_type)
+    #     i += 1
+
     if not matches:
         return None
     node2 = deepcopy(random.choice(matches))

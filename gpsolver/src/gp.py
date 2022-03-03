@@ -192,27 +192,32 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
 
     population = [generate_program(g) for _ in range(population_size)]
 
-    for _ in range(max_generation):
+    for idx in range(max_generation):
+
+        print("-------------------------------Starting Generation", idx + 1, "-------------------------------")
 
         scores = [fitness(p, examples_info_dict) for p in population]
 
         for i in range(population_size):
-            if scores[i] == 1.0 and verify(population[i], examples_info_dict):
+            # print("Verifying", print_ast(population[i]))
+            if scores[i] == 1.0 and len(verify(population[i], examples_info_dict)) == 0:
                 return population[i]
 
         selection = select(population, scores, num_selection)
-        population = breed(g, selection, population_size, 0.5, 0.5)
-        #print(scores)
+
+        population = breed(g, selection, population_size, 0.0, 1.0)
 
     scores = [fitness(p,examples_info_dict) for p in population]
 
-    return population[scores.index(max(scores))]
+    return None
 
 if __name__ == '__main__':
 
-    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
+    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/bikes.sl"
+    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/phone-5.sl"
+    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl"
 
     # Load the grammar from the file
 
@@ -263,20 +268,12 @@ if __name__ == '__main__':
         'examples_dict': examples_dict,
         'examples_idx_arr': ex_idx_arr,
     }
-#1024, 128, 256
-    result = genetic_programming(g, 100, 4, 70, fitness, select, breed, verify, eg_info_dict)
-    if result:
-        print(print_ast(result))
 
-    # Generate a random program for testing
+    print("starting genetic_programming")
 
-    #a = generate_program(g)
-
-    # print(print_prog(a))
-
-    # Call verify on the program
-
-    #print(verify(a, eg_info_dict))
-
-
+    result = genetic_programming(g, 1024, 8, 1024, fitness, select, breed, verify, eg_info_dict)
+    if result is not None:
+        print("Final solution", print_ast(result))
+    else:
+        print("Unable to find a solution")
 
