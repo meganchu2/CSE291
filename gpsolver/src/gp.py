@@ -1,9 +1,9 @@
 import copy
 import random
 import numpy as np
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
-from program import Node, VarNode, FuncNode, ConstNode
+from program import Node, VarNode, FuncNode, ConstNode, print_ast
 from grammar import Grammar
 from operation import generate_program, mutate, crossover
 
@@ -79,7 +79,7 @@ def get_py_function(prog_ast, var_dict):
             return (lambda a: len(a))(child_progs[0])
 
         elif prog_ast.func_name == 'str.to.int':
-        
+
             def eval_c(a):
                 try:
                     if all(map(lambda x: '0' <= x <= '9', a)):
@@ -90,7 +90,7 @@ def get_py_function(prog_ast, var_dict):
                     return -1
 
             return (lambda a: eval_c(a))(child_progs[0])
-        
+
         elif prog_ast.func_name == 'str.indexof':
             return (lambda a, b, c: str.find(a, b, c))(child_progs[0], child_progs[1], child_progs[2])
 
@@ -161,25 +161,26 @@ def verify(prog, eg_info_dict):
 def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
                         fitness: Callable[[Node], float],
                         select: Callable[[List[Node], List[float], int], List[Node]],
-                        breed: Callable[[List[Node]], List[Node]],
-                        verify: Callable[[Node], bool]
+                        breed: Callable[[Grammar, List[Node], int, float, float], List[Node]],
+                        verify: Callable[[Node, Dict], List],
+                        examples_info_dict: Dict
                        ) -> Optional[Node]:
-    
+
     population = [generate_program(g) for _ in range(population_size)]
-    
+
     for _ in range(max_generation):
 
         scores = [fitness(p) for p in population]
 
         for i in range(population_size):
-            if scores[i] == 1.0 and verify(population[i]):
+            if scores[i] == 1.0 and verify(population[i], examples_info_dict):
                 return population[i]
 
         selection = select(population, scores, num_selection)
-        population = breed(selection)
+        population = breed(g, selection, population_size, 0.5, 0.5)
 
     scores = [fitness(p) for p in population]
-    
+
     return population[scores.index(max(scores))]
 
 if __name__ == '__main__':
@@ -212,7 +213,7 @@ if __name__ == '__main__':
             ex_components = ex_str.split(")")[:-2]
 
             ex_in_list = ex_components[0].split("\"")
-            
+
             num_params = int((len(ex_in_list) - 1) / 2)
             ex_params = [ex_in_list[int(1 + 2 * i)] for i in range(num_params)]
 
@@ -238,16 +239,19 @@ if __name__ == '__main__':
         'examples_idx_arr': ex_idx_arr,
     }
 
+    result = genetic_programming(g, 1024, 128, 256, lambda x: 1.0, select, breed, verify, eg_info_dict)
+    if result:
+        print_ast(result)
 
     # Generate a random program for testing
 
-    a = generate_program(g)
+    #a = generate_program(g)
 
     # print(print_prog(a))
 
     # Call verify on the program
 
-    print(verify(a, eg_info_dict))
+    #print(verify(a, eg_info_dict))
 
 
 

@@ -12,7 +12,6 @@ def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
     queue = [root]
     while queue:
         node = queue.pop(0)
-        # print(node.to_dict())
         rules = g.all_rules[node.nt_name] if node.depth < max_depth - 1 else g.terminal_rules[node.nt_name]
         if not rules:
             continue
@@ -25,18 +24,14 @@ def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
         return generate_program(g, max_depth)
     return node
 
-# note that we do not want to pick the root node
 def get_nodes(root: Node) -> List[Node]:
-    return [] # TODO
+    return root.children + [n for c in root.children for n in get_nodes(c)]
 
 def get_revertible_nodes(root: Node) -> List[Node]:
-    return [] # TODO
+    return root.children + [n for c in root.children for n in get_nodes(c) if n.revert]
 
-def get_same_type_nodes(root: Node, expr_type: int) -> List[Node]:
-    return [] # TODO
-
-def revert_node(node: Node) -> NTNode:
-    return NTNode("", 0) # TODO
+def get_same_type_nodes(root: Node, expr_type: str) -> List[Node]:
+    return root.children + [n for c in root.children for n in get_nodes(c) if n.expr_type == expr_type]
 
 def generate_program(g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
     assert max_depth > 0
@@ -48,7 +43,7 @@ def mutate(program: Node, g: Grammar) -> Optional[Node]:
     nodes = get_revertible_nodes(new_program)
     if not nodes:
         return None
-    new_node = revert_node(random.choice(nodes))
+    new_node = random.choice(nodes).revert
     new_node = expand(new_node, g)
     if new_node.parent:
         new_node.parent.children[int(new_node.id[-1])] = new_node
