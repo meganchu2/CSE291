@@ -142,3 +142,9 @@ def print_ast(n: Node) -> str:
         s += ")"
         return s
     return n.get_name()
+    
+def count_nodes(n: Node) -> int:
+    if len(n.children) == 0:
+        return 1 # count self
+    else:
+        return 1 + sum([count_nodes(child) for child in n.children])
