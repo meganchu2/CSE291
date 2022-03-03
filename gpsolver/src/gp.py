@@ -79,7 +79,7 @@ def get_py_function(prog_ast, var_dict):
             return (lambda a: len(a))(child_progs[0])
 
         elif prog_ast.func_name == 'str.to.int':
-        
+
             def eval_c(a):
                 try:
                     if all(map(lambda x: '0' <= x <= '9', a)):
@@ -90,7 +90,7 @@ def get_py_function(prog_ast, var_dict):
                     return -1
 
             return (lambda a: eval_c(a))(child_progs[0])
-        
+
         elif prog_ast.func_name == 'str.indexof':
             return (lambda a, b, c: str.find(a, b, c))(child_progs[0], child_progs[1], child_progs[2])
 
@@ -164,9 +164,9 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
                         breed: Callable[[List[Node]], List[Node]],
                         verify: Callable[[Node], bool]
                        ) -> Optional[Node]:
-    
+
     population = [generate_program(g) for _ in range(population_size)]
-    
+
     for _ in range(max_generation):
 
         scores = [fitness(p) for p in population]
@@ -179,7 +179,7 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
         population = breed(selection)
 
     scores = [fitness(p) for p in population]
-    
+
     return population[scores.index(max(scores))]
 
 if __name__ == '__main__':
@@ -212,7 +212,7 @@ if __name__ == '__main__':
             ex_components = ex_str.split(")")[:-2]
 
             ex_in_list = ex_components[0].split("\"")
-            
+
             num_params = int((len(ex_in_list) - 1) / 2)
             ex_params = [ex_in_list[int(1 + 2 * i)] for i in range(num_params)]
 

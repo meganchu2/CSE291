@@ -29,7 +29,7 @@ class Node:
         new = deepcopy(rule.rhs)
         new.id = self.id
         new.parent = self.parent
-        new.revert = self.to_dict()
+        new.revert = self
         new.depth = self.depth
         for i, c in enumerate(new.children):
             c.parent = new
