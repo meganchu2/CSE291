@@ -1,33 +1,3 @@
-Skip to content
-Search or jump to…
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@sharanmayank 
-meganchu2
-/
-CSE291
-Public
-Code
-Issues
-Pull requests
-Actions
-Projects
-1
-Wiki
-Security
-Insights
-CSE291/gpsolver/src/gp.py /
-@klivoth
-klivoth Fitness function in lexicase selection
-Latest commit 74b5205 22 minutes ago
- History
- 3 contributors
-@meganchu2@klivoth@sharanmayank
-451 lines (325 sloc)  14.1 KB
-   
 import copy
 import random
 import numpy as np
@@ -464,11 +434,11 @@ def levenshteinDistanceDP(token1, token2):
 
     for t2 in range(len(token2) + 1):
         distances[0][t2] = t2
-        
+
     a = 0
     b = 0
     c = 0
-    
+
     for t1 in range(1, len(token1) + 1):
         for t2 in range(1, len(token2) + 1):
             if (token1[t1-1] == token2[t2-1]):
@@ -477,7 +447,7 @@ def levenshteinDistanceDP(token1, token2):
                 a = distances[t1][t2 - 1]
                 b = distances[t1 - 1][t2]
                 c = distances[t1 - 1][t2 - 1]
-                
+
                 if (a <= b and a <= c):
                     distances[t1][t2] = a + 1
                 elif (b <= a and b <= c):
