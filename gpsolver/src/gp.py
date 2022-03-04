@@ -154,10 +154,10 @@ def get_py_function(prog_ast, var_dict):
 
         elif prog_ast.func_name == '+':
             return (lambda a,b: a + b)(child_progs[0], child_progs[1])
-            
+
         elif prog_ast.func_name == 'ite':
             return (lambda a, b, c: (b if a else c))(child_progs[0], child_progs[1], child_progs[2])
-            
+
         else:
             print("Unknown function", prog_ast.to_dict())
             return None
@@ -277,7 +277,7 @@ def get_out_str(prog, eg_info_dict):
 
 
 def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
-                        #fitness: Callable[[Node], float],
+                        fitness: Callable[[Node], float],
                         #select: Callable[[List[Node], List[float], int], List[Node]],
                         breed: Callable[[Grammar, List[Node], int, float, float], List[Node]],
                         verify: Callable[[Node, Dict], List],
@@ -336,7 +336,10 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
 
         #selection = select(population, scores, num_selection)
         selection = lexicase_select(population, num_selection, examples_info_dict)
-        population = breed(g, selection, population_size, 0.0, 1.0)
+        children = breed(g, selection, population_size, 0.0, 1.0)
+        population = children + selection
+        scores = [fitness(p) for p in population]
+        population = sorted(range(len(population)), key=lambda x: scores[x])[-population_size:]
 
     return result
 
@@ -400,9 +403,9 @@ def load_examples(benchmark_file):
 if __name__ == '__main__':
 
 
-    #benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
+    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl" # easy
-    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
+    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/bikes.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/phone-5.sl"
@@ -420,7 +423,7 @@ if __name__ == '__main__':
 
     print("starting genetic_programming")
 
-    result = genetic_programming(g, population_size, max_generation, num_selection, breed, verify, eg_info_dict)
+    result = genetic_programming(g, population_size, max_generation, num_selection, fitness, breed, verify, eg_info_dict)
 
     solution = smallest_prog(result)
 
