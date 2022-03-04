@@ -13,6 +13,39 @@ def select(programs: List[Node], scores: List[float], num_selection: int) -> Lis
     selection = sorted(range(len(programs)), key=lambda x: scores[x])[-num_selection:]
     return [programs[i] for i in selection]
 
+def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
+    params = ex["params"]
+    output = ex["output"]
+    var_dict = {k: v for (k, v) in zip(var_names, params)}
+    try:
+        prog_out = get_py_function(p, var_dict)
+        return prog_out == output
+    except Exception as _:
+        return False
+
+def lexicase_select(programs: List[Node], num_selection: int, examples_info_dict: Dict) -> List[Node]:
+    assert len(programs) >= num_selection
+    var_names = examples_info_dict["var_names"]
+    exs = list(examples_info_dict["examples_dict"].values())
+    survivors = []
+    while len(survivors) < num_selection:
+        random.shuffle(exs)
+        current = [i for i in range(len(programs)) if i not in survivors]
+        selected = False
+        for ex in exs:
+            new = list(filter(lambda p: verify_single(p, ex, var_names), current))
+            if not new:
+                survivors.append(random.choice(current))
+                selected = True
+                break
+            if len(new) == 1:
+                survivors.append(new[0])
+                selected = True
+                break
+            current = new
+        if not selected:
+            survivors.append(random.choice(current))
+    return [programs[i] for i in survivors]
 
 def breed(g: Grammar, population: List[Node], population_size: int,
           mutation_prob: float, crossover_prob: float
@@ -195,16 +228,16 @@ def smallest_prog(programs: List[Node]):
     if minInd == -1:
         return None
     return programs[minInd]
-        
+
 
 
 def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
-                        fitness: Callable[[Node], float],
-                        select: Callable[[List[Node], List[float], int], List[Node]],
+                        #fitness: Callable[[Node], float],
+                        #select: Callable[[List[Node], List[float], int], List[Node]],
                         breed: Callable[[Grammar, List[Node], int, float, float], List[Node]],
                         verify: Callable[[Node, Dict], List],
                         examples_info_dict: Dict
-                       ) -> Optional[List[Node]]:
+                       ) -> List[Node]:
 
     population = [generate_program(g) for _ in range(population_size)]
     result = []
@@ -213,24 +246,25 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
 
         print("-------------------------------Starting Generation", idx + 1, "-------------------------------")
 
-        scores = [fitness(p, examples_info_dict) for p in population]
+        #scores = [fitness(p, examples_info_dict) for p in population]
 
         for i in range(population_size):
             # print("Verifying", print_ast(population[i]))
             if len(verify(population[i], examples_info_dict)) == 0:
                 result.append(population[i])
-        
+
         if len(result) > 0: # at least one solution found in this generation, stop
             break
 
-        selection = select(population, scores, num_selection)
+        #selection = select(population, scores, num_selection)
+        selection = lexicase_select(population, num_selection, examples_info_dict)
 
         population = breed(g, selection, population_size, 0.0, 1.0)
 
-    scores = [fitness(p,examples_info_dict) for p in population]
+    #scores = [fitness(p,examples_info_dict) for p in population]
 
     return result
-    
+
 def load_examples(benchmark_file):
     f = open(benchmark_file, 'r')
 
@@ -250,13 +284,13 @@ def load_examples(benchmark_file):
         if line.startswith("(constraint"):
             ex_str = line.strip().split("(")[3]
             ex_components = ex_str.split(")")[:-2]
-            
+
             while len(ex_components) == 0: # constraint is on multiple lines in spec
                 i += 1
                 line = lines[i]
                 ex_str += line.strip()
-                ex_components = ex_str.split(")")[:-2]            
-            
+                ex_components = ex_str.split(")")[:-2]
+
             ex_in_list = ex_components[0].split("\"")
 
             num_params = int((len(ex_in_list) - 1) / 2)
@@ -268,7 +302,7 @@ def load_examples(benchmark_file):
                 'params': ex_params,
                 'output': ex_out
             }
-            
+
             ex_idx_arr.append(example_index)
 
             example_index += 1
@@ -284,12 +318,12 @@ def load_examples(benchmark_file):
         'examples_dict': examples_dict,
         'examples_idx_arr': ex_idx_arr,
     }
-    
+
     return eg_info_dict
 
 if __name__ == '__main__':
 
-    
+
     benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl" # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
@@ -303,15 +337,15 @@ if __name__ == '__main__':
 
     # Load the examples
     eg_info_dict = load_examples(benchmark_file)
-    
+
 
     print("starting genetic_programming")
 
-    result = genetic_programming(g, 1024, 8, 1024, fitness, select, breed, verify, eg_info_dict)
-    
+    result = genetic_programming(g, 1024, 8, 1024, breed, verify, eg_info_dict)
+
     solution = smallest_prog(result)
-    
-    if solution is not None:
+
+    if result is not None:
         print("Final solution", print_ast(solution))
     else:
         print("Unable to find a solution")
