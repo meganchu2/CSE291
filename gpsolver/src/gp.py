@@ -338,10 +338,13 @@ if __name__ == '__main__':
     # Load the examples
     eg_info_dict = load_examples(benchmark_file)
 
+    # get hyperparameters
+    (population_size, max_generation, num_selection) = g.get_hyperparameters(len(eg_info_dict))
+    print((population_size, max_generation, num_selection))
 
     print("starting genetic_programming")
 
-    result = genetic_programming(g, 1024, 8, 1024, breed, verify, eg_info_dict)
+    result = genetic_programming(g, population_size, max_generation, num_selection, breed, verify, eg_info_dict)
 
     solution = smallest_prog(result)
 

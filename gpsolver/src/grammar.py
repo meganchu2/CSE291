@@ -2,7 +2,7 @@ from parsers.sexp import sexp
 from program import *
 from typing import List, Any
 from collections import defaultdict
-
+import math
 
 class Grammar:
     def __init__(self, bmfile: str) -> None:
@@ -41,3 +41,15 @@ class Grammar:
             bm = stripComments(f)
             bme = sexp.parse_string(bm, parse_all=True).asList()[0]
         return bme[1][4]
+
+    def get_hyperparameters(self, constraints):
+        types = len(self.all_rules)
+        total = sum([len(self.all_rules[k]) for k in self.all_rules])
+        term = sum([len(self.terminal_rules[k]) for k in self.terminal_rules])
+        funcs = total - term
+        
+        # the more funcs and types there are, the greater the (population_size, max_generation, num_selection)
+        population_size = types*5 + funcs**3 + term**2
+        max_generation = 1 + math.floor(total/2) + math.floor(constraints/total)*2 # if constraints >> then output depends more on constraints
+        num_selection = math.floor(population_size*9.5/10)# 95% of population size
+        return (population_size, max_generation, num_selection)
