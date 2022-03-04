@@ -154,7 +154,10 @@ def get_py_function(prog_ast, var_dict):
 
         elif prog_ast.func_name == '+':
             return (lambda a,b: a + b)(child_progs[0], child_progs[1])
-
+            
+        elif prog_ast.func_name == 'ite':
+            return (lambda a, b, c: (b if a else c))(child_progs[0], child_progs[1], child_progs[2])
+            
         else:
             print("Unknown function", prog_ast.to_dict())
             return None
@@ -397,9 +400,9 @@ def load_examples(benchmark_file):
 if __name__ == '__main__':
 
 
-    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
+    #benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl" # easy
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
+    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/bikes.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/phone-5.sl"
