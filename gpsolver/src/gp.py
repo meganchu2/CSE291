@@ -165,7 +165,10 @@ def get_py_function(prog_ast, var_dict):
         return [prog_ast.func_name, child_progs]
 
 def fitness(prog, eg_info_dict):
-    # Loop over examples
+    # change boolean if we want to include jaccard similarity in fitness
+    jaccard = true
+
+    # Loop over examples    
     examples_idx_arr = copy.deepcopy(eg_info_dict['examples_idx_arr'])
     examples_dict = eg_info_dict['examples_dict']
     var_names = eg_info_dict['var_names']
@@ -183,7 +186,11 @@ def fitness(prog, eg_info_dict):
             prog_out = get_py_function(prog, var_dict)
             s = SequenceMatcher(None, prog_out, ex_out)
             m = s.find_longest_match(0,len(prog_out),0,len(ex_out))
-            correct += m.size/max(len(prog_out),len(ex_out))
+            if jaccard:
+                correct += m.size/max(len(prog_out),len(ex_out))
+                correct += m.size/(len(prog_out) + len(ex_out) + m.size)
+            else:
+                correct += m.size/max(len(prog_out),len(ex_out))
         except Exception as e:
             return 0.0
     return correct/len(examples_idx_arr)
