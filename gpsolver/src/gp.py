@@ -25,21 +25,21 @@ def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
     except Exception as _:
         return False
 
+def best_indices(scores: List[float]) -> List[int]:
+    mx = max(scores)
+    return [i for i, x in enumerate(scores) if x == mx]
+
 def lexicase_select(programs: List[Node], num_selection: int, examples_info_dict: Dict) -> List[Node]:
     assert len(programs) >= num_selection
-    var_names = examples_info_dict["var_names"]
-    exs = list(examples_info_dict["examples_dict"].values())
+    ex_indices = [i for i in range(len(examples_info_dict["examples_dict"]))]
     survivors = []
     while len(survivors) < num_selection:
-        random.shuffle(exs)
+        random.shuffle(ex_indices)
         current = [i for i in range(len(programs)) if i not in survivors]
         selected = False
-        for ex in exs:
-            new = list(filter(lambda p: verify_single(p, ex, var_names), current))
-            if not new:
-                survivors.append(random.choice(current))
-                selected = True
-                break
+        for ex in ex_indices:
+            scores = [fitness(programs[i], examples_info_dict, ex, True) for i in current]
+            new = [programs[current[i]] for i in best_indices(scores)]
             if len(new) == 1:
                 survivors.append(new[0])
                 selected = True
@@ -166,9 +166,9 @@ def get_py_function(prog_ast, var_dict):
 
 def fitness(prog, eg_info_dict, example_idx, jaccard):
     # change boolean if we want to include jaccard similarity in fitness
-    jaccard = true
-    
-    correct = 0    
+    jaccard = True
+
+    correct = 0
     examples_dict = eg_info_dict['examples_dict']
     var_names = eg_info_dict['var_names']
     ex_params = examples_dict[example_idx]['params']
@@ -190,14 +190,14 @@ def fitness(prog, eg_info_dict, example_idx, jaccard):
             correct += m.size/max(len(prog_out),len(ex_out))
     except Exception as e:
         return 0.0
-    
+
     return correct
 
 def fitness_all(prog, eg_info_dict):
     # change boolean if we want to include jaccard similarity in fitness
-    jaccard = true
+    jaccard = True
 
-    # Loop over examples    
+    # Loop over examples
     examples_idx_arr = copy.deepcopy(eg_info_dict['examples_idx_arr'])
     correct = 0
     for example_idx in examples_idx_arr:
@@ -293,7 +293,7 @@ def get_out_str(prog, eg_info_dict):
 
 
 def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
-                        fitness: Callable[[Node], float],
+                        #fitness: Callable[[Node, Dict], float],
                         #select: Callable[[List[Node], List[float], int], List[Node]],
                         breed: Callable[[Grammar, List[Node], int, float, float], List[Node]],
                         verify: Callable[[Node, Dict], List],
@@ -354,7 +354,7 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
         selection = lexicase_select(population, num_selection, examples_info_dict)
         children = breed(g, selection, population_size, 0.0, 1.0)
         population = children + selection
-        scores = [fitness(p) for p in population]
+        scores = [fitness_all(p, examples_info_dict) for p in population]
         population = sorted(range(len(population)), key=lambda x: scores[x])[-population_size:]
 
     return result
@@ -439,7 +439,7 @@ if __name__ == '__main__':
 
     print("starting genetic_programming")
 
-    result = genetic_programming(g, population_size, max_generation, num_selection, fitness, breed, verify, eg_info_dict)
+    result = genetic_programming(g, population_size, max_generation, num_selection, breed, verify, eg_info_dict)
 
     solution = smallest_prog(result)
 
