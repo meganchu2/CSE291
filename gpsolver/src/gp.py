@@ -164,35 +164,44 @@ def get_py_function(prog_ast, var_dict):
 
         return [prog_ast.func_name, child_progs]
 
-def fitness(prog, eg_info_dict):
+def fitness(prog, eg_info_dict, example_idx, jaccard):
+    # change boolean if we want to include jaccard similarity in fitness
+    jaccard = true
+    
+    correct = 0    
+    examples_dict = eg_info_dict['examples_dict']
+    var_names = eg_info_dict['var_names']
+    ex_params = examples_dict[example_idx]['params']
+    ex_out = examples_dict[example_idx]['output']
+    var_dict = {}
+    var_idx = 0
+    for var_name in var_names:
+        var_dict[var_name] = ex_params[var_idx]
+        var_idx += 1
+    is_correct = True
+    try:
+        prog_out = get_py_function(prog, var_dict)
+        s = SequenceMatcher(None, prog_out, ex_out)
+        m = s.find_longest_match(0,len(prog_out),0,len(ex_out))
+        if jaccard:
+            correct += m.size/max(len(prog_out),len(ex_out))
+            correct += m.size/(len(prog_out) + len(ex_out) + m.size)
+        else:
+            correct += m.size/max(len(prog_out),len(ex_out))
+    except Exception as e:
+        return 0.0
+    
+    return correct
+
+def fitness_all(prog, eg_info_dict):
     # change boolean if we want to include jaccard similarity in fitness
     jaccard = true
 
     # Loop over examples    
     examples_idx_arr = copy.deepcopy(eg_info_dict['examples_idx_arr'])
-    examples_dict = eg_info_dict['examples_dict']
-    var_names = eg_info_dict['var_names']
     correct = 0
     for example_idx in examples_idx_arr:
-        ex_params = examples_dict[example_idx]['params']
-        ex_out = examples_dict[example_idx]['output']
-        var_dict = {}
-        var_idx = 0
-        for var_name in var_names:
-            var_dict[var_name] = ex_params[var_idx]
-            var_idx += 1
-        is_correct = True
-        try:
-            prog_out = get_py_function(prog, var_dict)
-            s = SequenceMatcher(None, prog_out, ex_out)
-            m = s.find_longest_match(0,len(prog_out),0,len(ex_out))
-            if jaccard:
-                correct += m.size/max(len(prog_out),len(ex_out))
-                correct += m.size/(len(prog_out) + len(ex_out) + m.size)
-            else:
-                correct += m.size/max(len(prog_out),len(ex_out))
-        except Exception as e:
-            return 0.0
+        correct += fitness(prog, eg_info_dict, example_idx, jaccard)
     return correct/len(examples_idx_arr)
 
 def verify(prog, eg_info_dict):
