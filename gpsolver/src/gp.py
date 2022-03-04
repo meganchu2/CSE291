@@ -8,6 +8,8 @@ from grammar import Grammar
 from operation import generate_program, mutate, crossover
 from difflib import SequenceMatcher
 
+from datetime import datetime
+
 
 def select(programs: List[Node], scores: List[float], num_selection: int) -> List[Node]:
     selection = sorted(range(len(programs)), key=lambda x: scores[x])[-num_selection:]
@@ -62,6 +64,16 @@ def breed(g: Grammar, population: List[Node], population_size: int,
         child = child if child else parents[0]
         children.append(child)
     return children
+
+
+def prog_size(prog_ast):
+
+    child_size_sum = 0
+
+    for child in prog_ast.children:
+        child_size_sum += prog_size(child)
+
+    return child_size_sum + 1
 
 
 def print_prog(prog_ast):
@@ -231,6 +243,36 @@ def smallest_prog(programs: List[Node]):
 
 
 
+def get_out_str(prog, eg_info_dict):
+
+    examples_idx_arr = copy.deepcopy(eg_info_dict['examples_idx_arr'])
+
+    examples_dict = eg_info_dict['examples_dict']
+    var_names = eg_info_dict['var_names']
+
+    out_str = ""
+
+    for example_idx in examples_idx_arr:
+        ex_params = examples_dict[example_idx]['params']
+        ex_out = examples_dict[example_idx]['output']
+
+        var_dict = {}
+        var_idx = 0
+
+        for var_name in var_names:
+            var_dict[var_name] = ex_params[var_idx]
+            var_idx += 1
+
+        try:
+            prog_out = get_py_function(prog, var_dict)
+            out_str = out_str + prog_out
+        except Exception as e:
+            print("Program is faulty")
+            out_str = out_str + "<error>"
+
+    return out_str
+
+
 def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
                         #fitness: Callable[[Node], float],
                         #select: Callable[[List[Node], List[float], int], List[Node]],
@@ -239,14 +281,47 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
                         examples_info_dict: Dict
                        ) -> List[Node]:
 
-    population = [generate_program(g) for _ in range(population_size)]
+    t_start = datetime.now()
+
+    num_gen = 0
+    gen_prog_dict = {}
+
+    while num_gen < population_size:
+
+        new_prog = generate_program(g)
+        prog_key = get_out_str(new_prog, examples_info_dict)
+        old_prog = gen_prog_dict.get(prog_key)
+
+        if old_prog is None:
+
+            gen_prog_dict[prog_key] = new_prog
+            num_gen += 1
+
+            # print("Count", num_gen, "Added program", print_ast(new_prog))
+
+        elif prog_size(old_prog) > prog_size(new_prog):
+
+            gen_prog_dict[prog_key] = new_prog
+
+            # print("Count", num_gen, "Replaced program", print_ast(old_prog), "\n", print_ast(new_prog))
+
+    # population = [generate_program(g) for _ in range(population_size)]
+    population = list(gen_prog_dict.values())
+
     result = []
+
+    t_1 = datetime.now()
+
+    print("Initial population generation took", t_1 - t_start)
+
+    # Generate the initial population while checking for equivalence
 
     for idx in range(max_generation):
 
         print("-------------------------------Starting Generation", idx + 1, "-------------------------------")
 
         #scores = [fitness(p, examples_info_dict) for p in population]
+
 
         for i in range(population_size):
             # print("Verifying", print_ast(population[i]))
@@ -258,12 +333,10 @@ def genetic_programming(g: Grammar, population_size: int, max_generation: int, n
 
         #selection = select(population, scores, num_selection)
         selection = lexicase_select(population, num_selection, examples_info_dict)
-
         population = breed(g, selection, population_size, 0.0, 1.0)
 
-    #scores = [fitness(p,examples_info_dict) for p in population]
-
     return result
+
 
 def load_examples(benchmark_file):
     f = open(benchmark_file, 'r')
@@ -350,6 +423,7 @@ if __name__ == '__main__':
 
     if result is not None:
         print("Final solution", print_ast(solution))
+        print("Solution size", prog_size(solution))
     else:
         print("Unable to find a solution")
 
