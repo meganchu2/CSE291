@@ -5,7 +5,9 @@ import random
 from os import listdir
 from os.path import isdir, isfile, join
 
+from grammar import Grammar
 from program import FuncNode
+from sexp import sexp
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +135,26 @@ def get_bmfiles(bms, dir):
     return bmfiles
 
 
+def parse_benchmark(bm):
+    no_comments = "("
+    with open(bm, "r") as f:
+        for line in f:
+            no_comments += line.split(";", 1)[0]
+    no_comments += ")"
+
+    bm_parsed = sexp.parse_string(no_comments, parse_all=True).asList()[0]
+    synth = [i for i in bm_parsed if i[0] == "synth-fun"][0]
+    variables = [i[0] for i in synth[2]]
+    grammar = synth[4]
+    constraints = [i for i in bm_parsed if i[0] == "constraint"]
+    examples = []
+    for c in constraints:
+        ins = [i[1] for i in c[1][1][1:]]
+        out = c[1][2][1]
+        examples.append((ins, out))
+    return grammar, variables, examples
+
+
 def get_hyperparameters(grammar, args):
     num_prod = len(grammar.all_rules)
     all_rhs = [j.rhs for i in grammar.all_rules for j in i]
@@ -147,7 +169,10 @@ def get_hyperparameters(grammar, args):
 
 
 def solve(bm, args):
-    pass
+    parsed_bm = parse_benchmark(bm)
+    grammar = Grammar(parsed_bm[0])
+    variables = parsed_bm[1]
+    examples = parsed_bm[2]
 
 
 def main():
