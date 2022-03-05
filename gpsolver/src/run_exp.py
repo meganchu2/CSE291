@@ -136,7 +136,7 @@ def parse_benchmark(bm):
 
 def get_hyperparameters(grammar, args):
     num_prod = len(grammar.all_rules)
-    all_rhs = [j.rhs for i in grammar.all_rules for j in i]
+    all_rhs = [j.rhs for i in grammar.all_rules.values() for j in i]
     num_func = sum([isinstance(i, FuncNode) for i in all_rhs])
     max_arity = max([len(i.children) for i in all_rhs])
     pop_size = math.floor(
