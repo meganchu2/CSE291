@@ -4,7 +4,6 @@ import numpy as np
 from typing import Callable, Dict, List, Optional
 
 from program import Node, VarNode, FuncNode, ConstNode
-from grammar import Grammar
 from operation import generate_program, mutate, crossover
 from utils import logger
 from difflib import SequenceMatcher
@@ -30,34 +29,28 @@ func_dict = {
 }
 
 
-def select(programs: List[Node], scores: List[float], num_selection: int) -> List[Node]:
-    selection = sorted(range(len(programs)), key=lambda x: scores[x])[-num_selection:]
-    return [programs[i] for i in selection]
-
-def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
-    params = ex["params"]
-    output = ex["output"]
-    var_dict = {k: v for (k, v) in zip(var_names, params)}
-    try:
-        prog_out = execute(p, var_dict)
-        return prog_out == output
-    except Exception as _:
-        return False
-
-def best_indices(scores: List[float]) -> List[int]:
+def best_indices(scores):
     mx = max(scores)
     return [i for i, x in enumerate(scores) if x == mx]
 
-def lexicase_select(programs: List[Node], num_selection: int, examples_info_dict: Dict) -> List[Node]:
+
+def select(programs, num_selection, constraints, algorithm, metric):
     assert len(programs) >= num_selection
-    ex_indices = [i for i in range(len(examples_info_dict["examples_dict"]))]
+    if algorithm == "best":
+        scores = [fitness_all(p, constraints, metric) for p in programs]
+        selection = sorted(range(len(programs)), key=lambda x: scores[x])[-num_selection:]
+        return [programs[i] for i in selection]
+
+    # lexicase selection
+    variables, exs = constraints
+    ex_indices = list(range(len(exs)))
     survivors = []
     while len(survivors) < num_selection:
         random.shuffle(ex_indices)
-        current = [i for i in range(len(programs)) if i not in survivors]
+        current = list(filter(lambda i: i not in survivors, range(len(programs))))
         selected = False
-        for ex in ex_indices:
-            scores = [fitness(programs[i], examples_info_dict, ex, True) for i in current]
+        for ex_idx in ex_indices:
+            scores = [fitness(programs[i], variables, exs[ex_idx], metric) for i in current]
             new = [programs[current[i]] for i in best_indices(scores)]
             if len(new) == 1:
                 survivors.append(new[0])
@@ -68,15 +61,14 @@ def lexicase_select(programs: List[Node], num_selection: int, examples_info_dict
             survivors.append(random.choice(current))
     return [programs[i] for i in survivors]
 
-def breed(g: Grammar, population: List[Node], population_size: int,
-          mutation_prob: float, crossover_prob: float
-         ) -> List[Node]:
+
+def breed(grammar, population, pop_size, mutation_prob, crossover_prob):
     children = []
-    for _ in range(population_size):
+    for _ in range(pop_size):
         parents = random.sample(population, 2)
         for i, p in enumerate(parents):
             if random.random() < mutation_prob:
-                new = mutate(p, g)
+                new = mutate(p, grammar)
                 if new:
                     parents[i] = new
         child = crossover(parents) if random.random() < crossover_prob else None
@@ -164,6 +156,18 @@ def fitness_all(prog, eg_info_dict):
     for example_idx in examples_idx_arr:
         correct += fitness(prog, eg_info_dict, example_idx, jaccard)
     return correct/len(examples_idx_arr)
+
+
+def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
+    params = ex["params"]
+    output = ex["output"]
+    var_dict = {k: v for (k, v) in zip(var_names, params)}
+    try:
+        prog_out = execute(p, var_dict)
+        return prog_out == output
+    except Exception as _:
+        return False
+
 
 def verify(prog, eg_info_dict):
 
@@ -254,7 +258,6 @@ def initialize_population(grammar, constraints, population_size, max_depth):
 
 
 def genetic_programming(grammar, args, other_hps, constraints):
-
     pop_size, num_selection, num_offspring = other_hps
 
     t_start = datetime.now()
@@ -271,7 +274,7 @@ def genetic_programming(grammar, args, other_hps, constraints):
         if len(result) > 0:
             break
 
-        selection = select(population, num_selection, constraints)
+        selection = select(population, num_selection, constraints, args.select, args.fitness)
         children = breed(grammar, selection, num_offspring, args.mutation_prob, args.crossover_prob)
         population = children + selection
         scores = [fitness_all(p, constraints) for p in population]
