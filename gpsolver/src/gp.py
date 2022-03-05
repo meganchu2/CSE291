@@ -12,6 +12,24 @@ from difflib import SequenceMatcher
 from datetime import datetime
 
 
+func_dict = {
+    "str.++": lambda a, b: a + b,
+    "str.replace": lambda a, b, c: str.replace(a, b, c, 1),
+    "str.at": lambda a, b: a[b] if 0 <= b < len(a) else "",
+    "int.to.str": lambda a: str(a) if a >= 0 else "",
+    "str.substr": lambda a, b, c: a[b:(c+b)] if 0 <= b and len(a) >= (c + b) >= b else "",
+    "str.len": lambda a: len(a),
+    "str.to.int": lambda a: int(a) if a.isnumeric() else -1,
+    "str.indexof": lambda a, b, c: str.find(a, b, c),
+    "str.prefixof": lambda a, b: str.startswith(a, b),
+    "str.suffixof": lambda a, b: str.endswith(a, b),
+    "str.contains": lambda a, b: str.find(a, b) != -1,
+    "-": lambda a, b: a - b,
+    "+": lambda a, b: a + b,
+    "ite": lambda a, b, c: b if a else c,
+}
+
+
 def select(programs: List[Node], scores: List[float], num_selection: int) -> List[Node]:
     selection = sorted(range(len(programs)), key=lambda x: scores[x])[-num_selection:]
     return [programs[i] for i in selection]
@@ -21,7 +39,7 @@ def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
     output = ex["output"]
     var_dict = {k: v for (k, v) in zip(var_names, params)}
     try:
-        prog_out = get_py_function(p, var_dict)
+        prog_out = execute(p, var_dict)
         return prog_out == output
     except Exception as _:
         return False
@@ -92,78 +110,20 @@ def print_prog(prog_ast):
         return [prog_ast.func_name, child_progs]
 
 
-def get_py_function(prog_ast, var_dict):
-
-    child_progs = []
-
-    for child in prog_ast.children:
-        child_progs.append(get_py_function(child, var_dict))
-
-    if isinstance(prog_ast, ConstNode):
-        return prog_ast.value
-
-    elif isinstance(prog_ast, VarNode):
-        return var_dict[prog_ast.name]
-
-    elif isinstance(prog_ast, FuncNode):
-
-        if prog_ast.func_name == 'str.++':
-            return (lambda a, b : a + b)(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == 'str.replace':
-            return (lambda a,b,c: str.replace(a, b, c, 1))(child_progs[0], child_progs[1], child_progs[2])
-
-        elif prog_ast.func_name == 'str.at':
-            return (lambda a,b: a[b] if 0 <= b < len(a) else '')(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == 'int.to.str':
-            return (lambda a : str(a) if a >= 0 else '')(child_progs[0])
-
-        elif prog_ast.func_name == 'str.substr':
-            return (lambda a,b,c: a[b:(c+b)] if 0 <= b and len(a) >= (c+b) >= b else '')(child_progs[0], child_progs[1], child_progs[2])
-
-        elif prog_ast.func_name == 'str.len':
-            return (lambda a: len(a))(child_progs[0])
-
-        elif prog_ast.func_name == 'str.to.int':
-
-            def eval_c(a):
-                try:
-                    if all(map(lambda x: '0' <= x <= '9', a)):
-                        return int(a)
-                    else:
-                        return -1
-                except ValueError:
-                    return -1
-
-            return (lambda a: eval_c(a))(child_progs[0])
-
-        elif prog_ast.func_name == 'str.indexof':
-            return (lambda a, b, c: str.find(a, b, c))(child_progs[0], child_progs[1], child_progs[2])
-
-        elif prog_ast.func_name == 'str.prefixof':
-            return (lambda a, b: str.startswith(a, b))(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == 'str.suffixof':
-            return (lambda a, b: str.endswith(a, b))(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == 'str.contains':
-            return (lambda a,b: str.find(a,b) != -1)(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == '-':
-            return (lambda a,b: a - b)(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == '+':
-            return (lambda a,b: a + b)(child_progs[0], child_progs[1])
-
-        elif prog_ast.func_name == 'ite':
-            return (lambda a, b, c: (b if a else c))(child_progs[0], child_progs[1], child_progs[2])
-
-        else:
-            print("Unknown function", prog_ast.to_dict())
+def execute(prog, var_dict):
+    child_progs = [execute(child, var_dict) for child in prog.children]
+    if isinstance(prog, ConstNode):
+        return prog.value
+    elif isinstance(prog, VarNode):
+        return var_dict[prog.name]
+    elif isinstance(prog, FuncNode):
+        fn = func_dict.get(prog.func_name)
+        if fn is None:
+            logger.info(f"Unknown function: {prog.to_dict()}")
             return None
+        return fn(*child_progs)
+    return None
 
-        return [prog_ast.func_name, child_progs]
 
 def fitness(prog, eg_info_dict, example_idx, jaccard):
     # change boolean if we want to include jaccard similarity in fitness
@@ -181,7 +141,7 @@ def fitness(prog, eg_info_dict, example_idx, jaccard):
         var_idx += 1
     is_correct = True
     try:
-        prog_out = get_py_function(prog, var_dict)
+        prog_out = execute(prog, var_dict)
         s = SequenceMatcher(None, prog_out, ex_out)
         m = s.find_longest_match(0,len(prog_out),0,len(ex_out))
         if jaccard:
@@ -235,7 +195,7 @@ def verify(prog, eg_info_dict):
         is_correct = True
 
         try:
-            prog_out = get_py_function(prog, var_dict)
+            prog_out = execute(prog, var_dict)
             is_correct = prog_out == ex_out
         except Exception as e:
             is_correct = False
@@ -268,7 +228,7 @@ def get_out_str(prog, eg_info_dict):
             var_idx += 1
 
         try:
-            prog_out = get_py_function(prog, var_dict)
+            prog_out = execute(prog, var_dict)
             out_str = out_str + prog_out
         except Exception as e:
             print("Program is faulty")
@@ -293,13 +253,9 @@ def initialize_population(grammar, constraints, population_size, max_depth):
     return list(gen_prog_dict.values())
 
 
-select_dict = {"best": select, "lexicase": lexicase_select}
-
-
 def genetic_programming(grammar, args, other_hps, constraints):
 
     pop_size, num_selection, num_offspring = other_hps
-    select = select_dict[args.select]
 
     t_start = datetime.now()
     population = initialize_population(grammar, constraints, pop_size, args.init_max_depth)
