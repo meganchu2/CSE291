@@ -3,30 +3,12 @@ import random
 import numpy as np
 from typing import Callable, Dict, List, Optional
 
-from program import Node, VarNode, FuncNode, ConstNode
+from program import Node, execute_batch
 from operation import generate_program, mutate, crossover
 from utils import logger
 from difflib import SequenceMatcher
 
 from datetime import datetime
-
-
-func_dict = {
-    "str.++": lambda a, b: a + b,
-    "str.replace": lambda a, b, c: str.replace(a, b, c, 1),
-    "str.at": lambda a, b: a[b] if 0 <= b < len(a) else "",
-    "int.to.str": lambda a: str(a) if a >= 0 else "",
-    "str.substr": lambda a, b, c: a[b:(c+b)] if 0 <= b and len(a) >= (c + b) >= b else "",
-    "str.len": lambda a: len(a),
-    "str.to.int": lambda a: int(a) if a.isnumeric() else -1,
-    "str.indexof": lambda a, b, c: str.find(a, b, c),
-    "str.prefixof": lambda a, b: str.startswith(a, b),
-    "str.suffixof": lambda a, b: str.endswith(a, b),
-    "str.contains": lambda a, b: str.find(a, b) != -1,
-    "-": lambda a, b: a - b,
-    "+": lambda a, b: a + b,
-    "ite": lambda a, b, c: b if a else c,
-}
 
 
 def best_indices(scores):
@@ -77,46 +59,6 @@ def breed(grammar, population, pop_size, mutation_prob, crossover_prob):
     return children
 
 
-def prog_size(prog_ast):
-
-    child_size_sum = 0
-
-    for child in prog_ast.children:
-        child_size_sum += prog_size(child)
-
-    return child_size_sum + 1
-
-
-def print_prog(prog_ast):
-
-    child_progs = []
-
-    for child in prog_ast.children:
-        child_progs.append(print_prog(child))
-
-    if isinstance(prog_ast, ConstNode):
-        return prog_ast.value
-    elif isinstance(prog_ast, VarNode):
-        return prog_ast.name
-    elif isinstance(prog_ast, FuncNode):
-        return [prog_ast.func_name, child_progs]
-
-
-def execute(prog, var_dict):
-    child_progs = [execute(child, var_dict) for child in prog.children]
-    if isinstance(prog, ConstNode):
-        return prog.value
-    elif isinstance(prog, VarNode):
-        return var_dict[prog.name]
-    elif isinstance(prog, FuncNode):
-        fn = func_dict.get(prog.func_name)
-        if fn is None:
-            logger.info(f"Unknown function: {prog.to_dict()}")
-            return None
-        return fn(*child_progs)
-    return None
-
-
 def fitness(prog, eg_info_dict, example_idx, jaccard):
     # change boolean if we want to include jaccard similarity in fitness
     jaccard = True
@@ -133,7 +75,7 @@ def fitness(prog, eg_info_dict, example_idx, jaccard):
         var_idx += 1
     is_correct = True
     try:
-        prog_out = execute(prog, var_dict)
+        prog_out = prog.execute(var_dict)
         s = SequenceMatcher(None, prog_out, ex_out)
         m = s.find_longest_match(0,len(prog_out),0,len(ex_out))
         if jaccard:
@@ -163,7 +105,7 @@ def verify_single(p: Node, ex: Dict, var_names: List[str]) -> bool:
     output = ex["output"]
     var_dict = {k: v for (k, v) in zip(var_names, params)}
     try:
-        prog_out = execute(p, var_dict)
+        prog_out = p.execute(var_dict)
         return prog_out == output
     except Exception as _:
         return False
@@ -199,7 +141,7 @@ def verify(prog, eg_info_dict):
         is_correct = True
 
         try:
-            prog_out = execute(prog, var_dict)
+            prog_out = prog.execute(var_dict)
             is_correct = prog_out == ex_out
         except Exception as e:
             is_correct = False
@@ -211,48 +153,18 @@ def verify(prog, eg_info_dict):
     return []
 
 
-def get_out_str(prog, eg_info_dict):
-
-    examples_idx_arr = copy.deepcopy(eg_info_dict['examples_idx_arr'])
-
-    examples_dict = eg_info_dict['examples_dict']
-    var_names = eg_info_dict['var_names']
-
-    out_str = ""
-
-    for example_idx in examples_idx_arr:
-        ex_params = examples_dict[example_idx]['params']
-        ex_out = examples_dict[example_idx]['output']
-
-        var_dict = {}
-        var_idx = 0
-
-        for var_name in var_names:
-            var_dict[var_name] = ex_params[var_idx]
-            var_idx += 1
-
-        try:
-            prog_out = execute(prog, var_dict)
-            out_str = out_str + prog_out
-        except Exception as e:
-            print("Program is faulty")
-            out_str = out_str + "<error>"
-
-    return out_str
-
-
 def initialize_population(grammar, constraints, population_size, max_depth):
     num_gen = 0
     gen_prog_dict = {}
     while num_gen < population_size:
         new_prog = generate_program(grammar, max_depth)
-        prog_key = get_out_str(new_prog, constraints)
+        prog_key = str(execute_batch(new_prog, constraints))
         old_prog = gen_prog_dict.get(prog_key)
 
         if old_prog is None:
             gen_prog_dict[prog_key] = new_prog
             num_gen += 1
-        elif prog_size(old_prog) > prog_size(new_prog):
+        elif old_prog.size() > new_prog.size():
             gen_prog_dict[prog_key] = new_prog
     return list(gen_prog_dict.values())
 

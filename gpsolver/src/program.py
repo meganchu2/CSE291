@@ -2,6 +2,26 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from utils import logger
+
+
+func_dict = {
+    "str.++": lambda a, b: a + b,
+    "str.replace": lambda a, b, c: str.replace(a, b, c, 1),
+    "str.at": lambda a, b: a[b] if 0 <= b < len(a) else "",
+    "int.to.str": lambda a: str(a) if a >= 0 else "",
+    "str.substr": lambda a, b, c: a[b:(c+b)] if 0 <= b and len(a) >= (c + b) >= b else "",
+    "str.len": lambda a: len(a),
+    "str.to.int": lambda a: int(a) if a.isnumeric() else -1,
+    "str.indexof": lambda a, b, c: str.find(a, b, c),
+    "str.prefixof": lambda a, b: str.startswith(a, b),
+    "str.suffixof": lambda a, b: str.endswith(a, b),
+    "str.contains": lambda a, b: str.find(a, b) != -1,
+    "-": lambda a, b: a - b,
+    "+": lambda a, b: a + b,
+    "ite": lambda a, b, c: b if a else c,
+}
+
 
 class Production:
     def __init__(self, lhs: NTNode, rhs: Node) -> None:
@@ -20,6 +40,13 @@ class Node:
 
     def __eq__(self, o: object) -> bool:
         return isinstance(o, Node) and self.expr_type == o.expr_type
+
+    def is_ground(self):
+        if isinstance(self, NTNode):
+            return False
+        if isinstance(self, FuncNode):
+            return all([c.is_ground for c in self.children])
+        return True
 
     def to_dict(self) -> dict[str, Any]:
         return {"node_type": self.node_type, "expr_type": self.expr_type, "depth": self.depth, "id": self.id}
@@ -41,6 +68,26 @@ class Node:
 
     def get_name(self) -> str:
         return ""
+
+    def size(self):
+        return 1 + sum([c.size() for c in self.children])
+
+
+    def execute(self, var_dict):
+        assert self.is_ground()
+        child_progs = [child.execute(var_dict) for child in self.children]
+        if isinstance(self, ConstNode):
+            return self.value
+        elif isinstance(self, VarNode):
+            return var_dict[self.name]
+        elif isinstance(self, FuncNode):
+            fn = func_dict.get(self.func_name)
+            if fn is None:
+                logger.info(f"Unknown function: {self.to_dict()}")
+                return None
+            return fn(*child_progs)
+        return None
+
 
 class VarNode(Node):
     def __init__(self, var_name: str, expr_type: str) -> None:
@@ -142,9 +189,17 @@ def print_ast(n: Node) -> str:
         s += ")"
         return s
     return n.get_name()
-    
-def count_nodes(n: Node) -> int:
-    if len(n.children) == 0:
-        return 1 # count self
-    else:
-        return 1 + sum([count_nodes(child) for child in n.children])
+
+
+def execute_batch(prog, constraints):
+    variables, exs = constraints
+    outputs = []
+    for ex in exs:
+        var_dict = {k: v for (k, v) in zip(variables, ex[0])}
+        try:
+            o = prog.execute(var_dict)
+        except Exception:
+            logger.debug("Program is faulty")
+            o = "<error>"
+        outputs.append(o)
+    return outputs

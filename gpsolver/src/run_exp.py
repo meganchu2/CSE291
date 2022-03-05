@@ -5,9 +5,9 @@ import random
 from os import listdir
 from os.path import basename, isdir, isfile, join
 
-from gp import genetic_programming, prog_size
+from gp import genetic_programming
 from grammar import Grammar
-from program import FuncNode, count_nodes, print_ast
+from program import FuncNode, print_ast
 from sexp import sexp
 from utils import set_logger
 
@@ -170,9 +170,9 @@ def solve(bm, args):
         (variables, examples),
     )
     if result is not None:
-        solution = max(zip(result, [count_nodes(p) for p in result]), key=lambda x: x[1])[0]
+        solution = max(zip(result, [p.size() for p in result]), key=lambda x: x[1])[0]
         logger.info(f"Final solution: {print_ast(solution)}")
-        logger.info(f"Solution size: {prog_size(solution)}")
+        logger.info(f"Solution size: {solution.size()}")
     else:
         logger.info("Unable to find a solution")
 
