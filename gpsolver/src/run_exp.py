@@ -3,13 +3,14 @@ import logging
 import math
 import random
 from os import listdir
-from os.path import isdir, isfile, join
+from os.path import basename, isdir, isfile, join
 
 from grammar import Grammar
 from program import FuncNode
 from sexp import sexp
+from utils import set_logger
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -25,10 +26,16 @@ def parse_args():
         default=True,
         type=bool
     )
+
+    # logging
     parser.add_argument(
         "--log_file",
-        default=None,
+        default="log.txt",
         type=str,
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true"
     )
 
     # methods
@@ -99,34 +106,6 @@ def parse_args():
     return args
 
 
-def get_logger(logger, log_file):
-    logger.setLevel(logging.DEBUG)
-    msg_fmt = "%(asctime)s - %(levelname)-5s - %(name)s -   %(message)s"
-    date_fmt = "%m/%d/%Y %H:%M:%S"
-
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.INFO)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    formatter = logging.Formatter(fmt=msg_fmt, datefmt=date_fmt)
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-    return logger
-
-
-def logging_setup(args):
-    global logger
-    logger = get_logger(
-        logger,
-        args.log_file if args.log_file else "log.txt"
-    )
-
-
 def get_bmfiles(bms, dir):
     if dir:
         return [join(bms, f) for f in listdir(bms) if isfile(join(bms, f))]
@@ -169,16 +148,24 @@ def get_hyperparameters(grammar, args):
 
 
 def solve(bm, args):
-    parsed_bm = parse_benchmark(bm)
+    bm_name = basename(bm).split(".")[0]
+    logger.info(f"benchmark: {bm_name}")
+    try:
+        parsed_bm = parse_benchmark(bm)
+    except Exception as _:
+        logger.debug("Incompatible benchmark format")
+        return None
     grammar = Grammar(parsed_bm[0])
     variables = parsed_bm[1]
     examples = parsed_bm[2]
+    pop_size, num_selection, num_offspring = get_hyperparameters(grammar, args)
+    logger.debug(f"population_size: {pop_size}, num_selection: {num_selection}, num_offspring: {num_offspring}")
 
 
-def main():
+if __name__ == "__main__":
     args = parse_args()
     random.seed(args.seed)
-    logging_setup(args)
+    set_logger(args.log_file, args.debug)
     logger.info(vars(args))
 
     if args.benchmark_dir:
@@ -190,6 +177,3 @@ def main():
 
     for bm in bmfiles:
         solve(bm, args)
-
-if __name__ == "__main__":
-    main()
