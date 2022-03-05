@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional
 from program import Node, VarNode, FuncNode, ConstNode, print_ast, count_nodes
 from grammar import Grammar
 from operation import generate_program, mutate, crossover
+from utils import logger
 from difflib import SequenceMatcher
 
 from datetime import datetime
@@ -292,129 +293,54 @@ def get_out_str(prog, eg_info_dict):
     return out_str
 
 
-def genetic_programming(g: Grammar, population_size: int, max_generation: int, num_selection: int,
-                        #fitness: Callable[[Node, Dict], float],
-                        #select: Callable[[List[Node], List[float], int], List[Node]],
-                        breed: Callable[[Grammar, List[Node], int, float, float], List[Node]],
-                        verify: Callable[[Node, Dict], List],
-                        examples_info_dict: Dict
-                       ) -> List[Node]:
-
-    t_start = datetime.now()
-
+def initialize_population(grammar, constraints, population_size, max_depth):
     num_gen = 0
     gen_prog_dict = {}
-
     while num_gen < population_size:
-
-        new_prog = generate_program(g)
-        prog_key = get_out_str(new_prog, examples_info_dict)
+        new_prog = generate_program(grammar, max_depth)
+        prog_key = get_out_str(new_prog, constraints)
         old_prog = gen_prog_dict.get(prog_key)
 
         if old_prog is None:
-
             gen_prog_dict[prog_key] = new_prog
             num_gen += 1
-
-            # print("Count", num_gen, "Added program", print_ast(new_prog))
-
         elif prog_size(old_prog) > prog_size(new_prog):
-
             gen_prog_dict[prog_key] = new_prog
+    return list(gen_prog_dict.values())
 
-            # print("Count", num_gen, "Replaced program", print_ast(old_prog), "\n", print_ast(new_prog))
 
-    # population = [generate_program(g) for _ in range(population_size)]
-    population = list(gen_prog_dict.values())
+select_dict = {"best": select, "lexicase": lexicase_select}
+
+
+def genetic_programming(grammar, args, other_hps, constraints):
+
+    pop_size, num_selection, num_offspring = other_hps
+    select = select_dict[args.select]
+
+    t_start = datetime.now()
+    population = initialize_population(grammar, constraints, pop_size, args.init_max_depth)
+    t_init = datetime.now()
+    logger.info(f"Initialization took {t_init - t_start}")
 
     result = []
-
-    t_1 = datetime.now()
-
-    print("Initial population generation took", t_1 - t_start)
-
-    # Generate the initial population while checking for equivalence
-
-    for idx in range(max_generation):
-
-        print("-------------------------------Starting Generation", idx + 1, "-------------------------------")
-
-        #scores = [fitness(p, examples_info_dict) for p in population]
-
-
-        for i in range(population_size):
-            # print("Verifying", print_ast(population[i]))
-            if len(verify(population[i], examples_info_dict)) == 0:
-                result.append(population[i])
-
-        if len(result) > 0: # at least one solution found in this generation, stop
+    for gen in range(args.num_generation):
+        logger.debug(f"Generation {gen + 1}")
+        for p in population:
+            if len(verify(p, constraints)) == 0:
+                result.append(p)
+        if len(result) > 0:
             break
 
-        #selection = select(population, scores, num_selection)
-        selection = lexicase_select(population, num_selection, examples_info_dict)
-        children = breed(g, selection, population_size, 0.0, 1.0)
+        selection = select(population, num_selection, constraints)
+        children = breed(grammar, selection, num_offspring, args.mutation_prob, args.crossover_prob)
         population = children + selection
-        scores = [fitness_all(p, examples_info_dict) for p in population]
-        population = sorted(range(len(population)), key=lambda x: scores[x])[-population_size:]
+        scores = [fitness_all(p, constraints) for p in population]
+        population = sorted(range(len(population)), key=lambda x: scores[x], reverse=True)[:pop_size]
 
+    t_end = datetime.now()
+    logger.info(f"GP took {t_end - t_init}")
+    logger.info(f"Total time {t_end - t_start}")
     return result
-
-
-def load_examples(benchmark_file):
-    f = open(benchmark_file, 'r')
-
-    examples_dict = {}
-    ex_idx_arr = []
-    example_index = 0
-
-    var_names = []
-    lines = f.readlines()
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-
-        if line.startswith("(declare-var"):
-            var_names.append(line.split(" ")[1])
-
-        if line.startswith("(constraint"):
-            ex_str = line.strip().split("(")[3]
-            ex_components = ex_str.split(")")[:-2]
-
-            while len(ex_components) == 0: # constraint is on multiple lines in spec
-                i += 1
-                line = lines[i]
-                ex_str += line.strip()
-                ex_components = ex_str.split(")")[:-2]
-
-            ex_in_list = ex_components[0].split("\"")
-
-            num_params = int((len(ex_in_list) - 1) / 2)
-            ex_params = [ex_in_list[int(1 + 2 * i)] for i in range(num_params)]
-
-            ex_out = ex_components[-1][0:-1].lstrip().lstrip("\"")
-
-            examples_dict[example_index] = {
-                'params': ex_params,
-                'output': ex_out
-            }
-
-            ex_idx_arr.append(example_index)
-
-            example_index += 1
-        i += 1
-
-    f.close()
-
-    # print(examples_dict)
-    # print(var_names)
-
-    eg_info_dict = {
-        'var_names': var_names,
-        'examples_dict': examples_dict,
-        'examples_idx_arr': ex_idx_arr,
-    }
-
-    return eg_info_dict
 
 
 def printDistances(distances, token1Length, token2Length):
@@ -456,37 +382,3 @@ def levenshteinDistanceDP(token1, token2):
                     distances[t1][t2] = c + 1
 
     return distances[len(token1)][len(token2)]
-
-
-if __name__ == '__main__':
-
-
-    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl" # easy
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/bikes.sl"
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/phone-5.sl"
-
-    # Load the grammar from the file
-
-    g = Grammar(benchmark_file)
-
-    # Load the examples
-    eg_info_dict = load_examples(benchmark_file)
-
-    # get hyperparameters
-    (population_size, max_generation, num_selection) = g.get_hyperparameters(len(eg_info_dict))
-    print((population_size, max_generation, num_selection))
-
-    print("starting genetic_programming")
-
-    result = genetic_programming(g, population_size, max_generation, num_selection, breed, verify, eg_info_dict)
-
-    solution = smallest_prog(result)
-
-    if result is not None:
-        print("Final solution", print_ast(solution))
-        print("Solution size", prog_size(solution))
-    else:
-        print("Unable to find a solution")

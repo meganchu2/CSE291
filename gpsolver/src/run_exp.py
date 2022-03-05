@@ -5,8 +5,9 @@ import random
 from os import listdir
 from os.path import basename, isdir, isfile, join
 
+from gp import genetic_programming, prog_size, smallest_prog
 from grammar import Grammar
-from program import FuncNode
+from program import FuncNode, print_ast
 from sexp import sexp
 from utils import set_logger
 
@@ -160,6 +161,20 @@ def solve(bm, args):
     examples = parsed_bm[2]
     pop_size, num_selection, num_offspring = get_hyperparameters(grammar, args)
     logger.debug(f"population_size: {pop_size}, num_selection: {num_selection}, num_offspring: {num_offspring}")
+
+    logger.debug("Start GP")
+    result = genetic_programming(
+        grammar,
+        args,
+        (pop_size, num_selection, num_offspring),
+        (variables, examples),
+    )
+    solution = smallest_prog(result)
+    if result is not None:
+        logger.info(f"Final solution: {print_ast(solution)}")
+        logger.info(f"Solution size: {prog_size(solution)}")
+    else:
+        logger.info("Unable to find a solution")
 
 
 if __name__ == "__main__":
