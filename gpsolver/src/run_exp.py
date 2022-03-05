@@ -5,9 +5,9 @@ import random
 from os import listdir
 from os.path import basename, isdir, isfile, join
 
-from gp import genetic_programming, prog_size, smallest_prog
+from gp import genetic_programming, prog_size
 from grammar import Grammar
-from program import FuncNode, print_ast
+from program import FuncNode, count_nodes, print_ast
 from sexp import sexp
 from utils import set_logger
 
@@ -169,8 +169,8 @@ def solve(bm, args):
         (pop_size, num_selection, num_offspring),
         (variables, examples),
     )
-    solution = smallest_prog(result)
     if result is not None:
+        solution = max(zip(result, [count_nodes(p) for p in result]), key=lambda x: x[1])[0]
         logger.info(f"Final solution: {print_ast(solution)}")
         logger.info(f"Solution size: {prog_size(solution)}")
     else:

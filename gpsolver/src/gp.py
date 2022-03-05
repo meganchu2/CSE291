@@ -3,7 +3,7 @@ import random
 import numpy as np
 from typing import Callable, Dict, List, Optional
 
-from program import Node, VarNode, FuncNode, ConstNode, print_ast, count_nodes
+from program import Node, VarNode, FuncNode, ConstNode
 from grammar import Grammar
 from operation import generate_program, mutate, crossover
 from utils import logger
@@ -245,22 +245,6 @@ def verify(prog, eg_info_dict):
             return [examples_dict[example_idx]]
 
     return []
-
-# return smallest program if there is one
-def smallest_prog(programs: List[Node]):
-    minSize = None
-    minInd = -1
-    for i in range(len(programs)):
-        size = count_nodes(programs[i])
-        if not minSize or size < minSize:
-            minSize = size
-            minInd = i
-        #print(print_ast(programs[i]))
-        #print(size)
-    if minInd == -1:
-        return None
-    return programs[minInd]
-
 
 
 def get_out_str(prog, eg_info_dict):
