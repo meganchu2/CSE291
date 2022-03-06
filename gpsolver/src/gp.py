@@ -96,6 +96,9 @@ def fitness(ans, out, metric):
     if metric == "levenshtein":
         length = max(len(ans), len(out))
         return (length - levenshteinDistanceDP(ans, out)) / float(length)
+    if metric.startswith("mix"):
+        alpha = float(metric[3:])
+        return alpha * fitness(ans, out, "match") + (1 - alpha) * fitness(ans, out, "levenshtein")
     return 0.0
 
 
