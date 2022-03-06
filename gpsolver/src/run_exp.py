@@ -23,9 +23,8 @@ def parse_args():
         required=True,
     )
     parser.add_argument(
-        "--benchmark_dir",
-        default=True,
-        type=bool
+        "--benchmark_list",
+        action="store_true"
     )
 
     # logging
@@ -69,12 +68,12 @@ def parse_args():
     )
     parser.add_argument(
         "--exp_functions",
-        default=2,
+        default=1,
         type=int,
     )
     parser.add_argument(
         "--exp_max_arity",
-        default=2,
+        default=1,
         type=int,
     )
     parser.add_argument(
@@ -107,12 +106,12 @@ def parse_args():
     return args
 
 
-def get_bmfiles(bms, dir):
-    if dir:
-        return [join(bms, f) for f in listdir(bms) if isfile(join(bms, f))]
-    with open(bms, "r") as f:
-        bmfiles = [line.strip() for line in f]
-    return bmfiles
+def get_bmfiles(bms, bm_list):
+    if bm_list:
+        with open(bms, "r") as f:
+            bmfiles = [line.strip() for line in f]
+        return bmfiles
+    return [join(bms, f) for f in listdir(bms) if isfile(join(bms, f))]
 
 
 def parse_benchmark(bm):
@@ -183,11 +182,11 @@ if __name__ == "__main__":
     set_logger(args.log_file, args.debug)
     logger.info(vars(args))
 
-    if args.benchmark_dir:
-        assert isdir(args.benchmarks)
-    else:
+    if args.benchmark_list:
         assert isfile(args.benchmarks)
-    bmfiles = get_bmfiles(args.benchmarks, args.benchmark_dir)
+    else:
+        assert isdir(args.benchmarks)
+    bmfiles = get_bmfiles(args.benchmarks, args.benchmark_list)
     logger.debug(f"Evaluate on {len(bmfiles)} benchmarks")
 
     for bm in bmfiles:
