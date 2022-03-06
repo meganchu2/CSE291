@@ -41,13 +41,13 @@ def generate_program(g, max_depth):
     return expand(root, g, max_depth)
 
 
-def mutate(program, g):
+def mutate(program, g, max_depth):
     new_program = deepcopy(program)
     nodes = get_revertible_nodes(new_program)
     if not nodes:
         return None
     new_node = random.choice(nodes).revert
-    new_node = expand(new_node, g)
+    new_node = expand(new_node, g, max_depth)
     if new_node.parent:
         new_node.parent.children[int(new_node.id[-1])] = new_node
     return new_program

@@ -42,16 +42,16 @@ def select(programs, num_selection, examples, algorithm, metric):
     return [programs[i] for i in survivors]
 
 
-def breed(grammar, population, pop_size, mutation_prob, crossover_prob):
+def breed(grammar, population, pop_size, args):
     children = []
     for _ in range(pop_size):
         parents = random.sample(population, 2)
         for i, p in enumerate(parents):
-            if random.random() < mutation_prob:
-                new = mutate(p, grammar)
+            if random.random() < args.mutation_prob:
+                new = mutate(p, grammar, args.max_depth)
                 if new:
                     parents[i] = new
-        child = crossover(parents) if random.random() < crossover_prob else None
+        child = crossover(parents) if random.random() < args.crossover_prob else None
         child = child if child else parents[0]
         children.append(child)
     return children
@@ -105,7 +105,7 @@ def genetic_programming(grammar, args, other_hps, examples):
     pop_size, num_selection, num_offspring = other_hps
 
     t_start = datetime.now()
-    population = initialize_population(grammar, examples, pop_size, args.init_max_depth)
+    population = initialize_population(grammar, examples, pop_size, args.max_depth)
     t_init = datetime.now()
     logger.info(f"Initialization took {t_init - t_start}")
 
@@ -117,7 +117,7 @@ def genetic_programming(grammar, args, other_hps, examples):
             break
 
         selection = select(population, num_selection, examples, args.select, args.fitness)
-        children = breed(grammar, selection, num_offspring, args.mutation_prob, args.crossover_prob)
+        children = breed(grammar, selection, num_offspring, args)
         population = children + selection
         scores = [fitness_all(examples["out"], execute_batch(p, examples["in"]), args.fitness) for p in population]
         indices = sorted(range(len(population)), key=lambda x: scores[x], reverse=True)[:pop_size]

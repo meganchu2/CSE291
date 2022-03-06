@@ -52,7 +52,7 @@ def parse_args():
 
     # hyperparameters
     parser.add_argument(
-        "--init_max_depth",
+        "--max_depth",
         default=4,
         type=int,
     )
