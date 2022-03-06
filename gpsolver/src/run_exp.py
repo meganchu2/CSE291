@@ -49,6 +49,11 @@ def parse_args():
         default="best",
         type=str,
     )
+    parser.add_argument(
+        "--breed",
+        default="random",
+        type=str,
+    )
 
     # hyperparameters
     parser.add_argument(

@@ -42,18 +42,40 @@ def select(programs, num_selection, examples, algorithm, metric):
     return [programs[i] for i in survivors]
 
 
-def breed(grammar, population, pop_size, args):
+def breed(grammar, population, pop_size, args, examples):
     children = []
-    for _ in range(pop_size):
-        parents = random.sample(population, 2)
-        for i, p in enumerate(parents):
-            if random.random() < args.mutation_prob:
-                new = mutate(p, grammar, args.max_depth)
-                if new:
-                    parents[i] = new
-        child = crossover(parents) if random.random() < args.crossover_prob else None
-        child = child if child else parents[0]
-        children.append(child)
+    if args.breed == "random":
+        for _ in range(pop_size):
+            parents = random.sample(population, 2)
+            for i, p in enumerate(parents):
+                if random.random() < args.mutation_prob:
+                    new = mutate(p, grammar, args.max_depth)
+                    if new:
+                        parents[i] = new
+            child = crossover(parents) if random.random() < args.crossover_prob else None
+            child = child if child else parents[0]
+            children.append(child)
+    elif args.breed == "union":
+        covers = []
+        for p in population:
+            outs = execute_batch(p, examples["in"])
+            answers = examples["out"]
+            covers.append(set([i for i in range(len(outs)) if outs[i] == answers[i]]))
+        pairs = []
+        for i in range(len(population) - 1):
+            for j in range(i + 1, len(population)):
+                pairs.append((i, j, len(covers[i].intersection(covers[j]))))
+        pairs = sorted(pairs, key=lambda x: x[2], reverse=True)[:pop_size]
+        for pair in pairs:
+            parents = [population[pair[0]], population[pair[1]]]
+            for i, p in enumerate(parents):
+                if random.random() < args.mutation_prob:
+                    new = mutate(p, grammar, args.max_depth)
+                    if new:
+                        parents[i] = new
+            child = crossover(parents) if random.random() < args.crossover_prob else None
+            child = child if child else parents[0]
+            children.append(child)
     return children
 
 
@@ -117,7 +139,7 @@ def genetic_programming(grammar, args, other_hps, examples):
             break
 
         selection = select(population, num_selection, examples, args.select, args.fitness)
-        children = breed(grammar, selection, num_offspring, args)
+        children = breed(grammar, selection, num_offspring, args, examples)
         population = children + selection
         scores = [fitness_all(examples["out"], execute_batch(p, examples["in"]), args.fitness) for p in population]
         indices = sorted(range(len(population)), key=lambda x: scores[x], reverse=True)[:pop_size]
