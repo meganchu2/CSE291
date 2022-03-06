@@ -48,11 +48,11 @@ def breed(grammar, population, pop_size, args, examples):
         for _ in range(pop_size):
             parents = random.sample(population, 2)
             for i, p in enumerate(parents):
-                if random.random() < args.mutation_prob:
+                if random.uniform(0, 1) < args.mutation_prob:
                     new = mutate(p, grammar, args.max_depth)
                     if new:
                         parents[i] = new
-            child = crossover(parents) if random.random() < args.crossover_prob else None
+            child = crossover(parents) if random.uniform(0, 1) < args.crossover_prob else None
             child = child if child else parents[0]
             children.append(child)
     elif args.breed == "union":
@@ -69,11 +69,11 @@ def breed(grammar, population, pop_size, args, examples):
         for pair in pairs:
             parents = [population[pair[0]], population[pair[1]]]
             for i, p in enumerate(parents):
-                if random.random() < args.mutation_prob:
+                if random.uniform(0, 1) < args.mutation_prob:
                     new = mutate(p, grammar, args.max_depth)
                     if new:
                         parents[i] = new
-            child = crossover(parents) if random.random() < args.crossover_prob else None
+            child = crossover(parents) if random.uniform(0, 1) < args.crossover_prob else None
             child = child if child else parents[0]
             children.append(child)
     return children

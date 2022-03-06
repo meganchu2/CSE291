@@ -1,8 +1,7 @@
 import random
 from copy import copy, deepcopy
 
-from grammar import Grammar
-from program import NTNode, Node, is_terminal
+from program import is_terminal
 
 
 def expand(root, g, max_depth):
