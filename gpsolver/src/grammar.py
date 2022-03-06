@@ -1,9 +1,8 @@
-from program import *
+from program import ConstNode, FuncNode, NTNode, VarNode, Production
 from collections import defaultdict
 
 class Grammar:
     def __init__(self, parsed_bm):
-
         li = parsed_bm
         start = li[0]
         self.start = NTNode(nt_name=start[2][0], expr_type=start[1])

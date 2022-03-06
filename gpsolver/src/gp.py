@@ -1,14 +1,11 @@
-import copy
-import random
+from datetime import datetime
+from difflib import SequenceMatcher
 import numpy as np
-from typing import Callable, Dict, List, Optional
+import random
 
-from program import Node, execute, execute_batch
+from program import execute, execute_batch
 from operation import generate_program, mutate, crossover
 from utils import logger
-from difflib import SequenceMatcher
-
-from datetime import datetime
 
 
 def best_indices(scores):
@@ -130,14 +127,6 @@ def genetic_programming(grammar, args, other_hps, examples):
     logger.info(f"GP took {t_end - t_init}")
     logger.info(f"Total time {t_end - t_start}")
     return result
-
-
-def printDistances(distances, token1Length, token2Length):
-
-    for t1 in range(token1Length + 1):
-        for t2 in range(token2Length + 1):
-            print(int(distances[t1][t2]), end=" ")
-        print()
 
 
 def levenshteinDistanceDP(token1, token2):

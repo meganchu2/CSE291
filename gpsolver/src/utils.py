@@ -2,6 +2,7 @@ import logging
 
 logger = logging.getLogger()
 
+
 def set_logger(log_file, debug):
     logger.setLevel(logging.DEBUG)
     msg_fmt = "%(asctime)s - %(levelname)-5s - %(name)s -   %(message)s"
