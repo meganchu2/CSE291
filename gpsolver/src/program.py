@@ -73,22 +73,6 @@ class Node:
         return 1 + sum([c.size() for c in self.children])
 
 
-    def execute(self, var_dict):
-        assert self.is_ground()
-        child_progs = [child.execute(var_dict) for child in self.children]
-        if isinstance(self, ConstNode):
-            return self.value
-        elif isinstance(self, VarNode):
-            return var_dict[self.name]
-        elif isinstance(self, FuncNode):
-            fn = func_dict.get(self.func_name)
-            if fn is None:
-                logger.info(f"Unknown function: {self.to_dict()}")
-                return None
-            return fn(*child_progs)
-        return None
-
-
 class VarNode(Node):
     def __init__(self, var_name: str, expr_type: str) -> None:
         super().__init__(expr_type)
@@ -191,15 +175,29 @@ def print_ast(n: Node) -> str:
     return n.get_name()
 
 
-def execute_batch(prog, constraints):
-    variables, exs = constraints
-    outputs = []
-    for ex in exs:
-        var_dict = {k: v for (k, v) in zip(variables, ex[0])}
+def execute(prog, var_dict):
+    assert prog.is_ground()
+    child_progs = [execute(child, var_dict) for child in prog.children]
+    if isinstance(prog, ConstNode):
+        return prog.value
+    elif isinstance(prog, VarNode):
+        return var_dict[prog.name]
+    elif isinstance(prog, FuncNode):
+        fn = func_dict.get(prog.func_name)
+        if fn is None:
+            logger.info(f"Unknown function: {prog.to_dict()}")
+            return None
+        return fn(*child_progs)
+    return None
+
+
+def execute_batch(prog, ins):
+    outs = []
+    for i in ins:
         try:
-            o = prog.execute(var_dict)
+            o = execute(prog, i)
         except Exception:
             logger.debug("Program is faulty")
             o = "<error>"
-        outputs.append(o)
-    return outputs
+        outs.append(o)
+    return outs

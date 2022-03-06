@@ -127,12 +127,13 @@ def parse_benchmark(bm):
     variables = [i[0] for i in synth[2]]
     grammar = synth[4]
     constraints = [i for i in bm_parsed if i[0] == "constraint"]
-    examples = []
+    ins, outs = [], []
     for c in constraints:
-        ins = [i[1] for i in c[1][1][1:]]
-        out = c[1][2][1]
-        examples.append((ins, out))
-    return grammar, variables, examples
+        i = [a[1] for a in c[1][1][1:]]
+        ins.append({k: v for (k, v) in zip(variables, i)})
+        o = c[1][2][1]
+        outs.append(o)
+    return grammar, {"in": ins, "out": outs}
 
 
 def get_hyperparameters(grammar, args):
@@ -157,8 +158,7 @@ def solve(bm, args):
         logger.debug("Incompatible benchmark format")
         return None
     grammar = Grammar(parsed_bm[0])
-    variables = parsed_bm[1]
-    examples = parsed_bm[2]
+    examples = parsed_bm[1]
     pop_size, num_selection, num_offspring = get_hyperparameters(grammar, args)
     logger.debug(f"population_size: {pop_size}, num_selection: {num_selection}, num_offspring: {num_offspring}")
 
@@ -167,7 +167,7 @@ def solve(bm, args):
         grammar,
         args,
         (pop_size, num_selection, num_offspring),
-        (variables, examples),
+        examples,
     )
     if result is not None:
         solution = max(zip(result, [p.size() for p in result]), key=lambda x: x[1])[0]
