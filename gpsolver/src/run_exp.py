@@ -168,7 +168,7 @@ def solve(bm, args):
         (pop_size, num_selection, num_offspring),
         examples,
     )
-    if result is not None:
+    if result:
         solution = max(zip(result, [p.size() for p in result]), key=lambda x: x[1])[0]
         logger.info(f"Final solution: {print_ast(solution)}")
         logger.info(f"Solution size: {solution.size()}")
