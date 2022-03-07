@@ -106,6 +106,11 @@ def parse_args():
         default=42,
         type=int,
     )
+    parser.add_argument(
+        "--timeout",
+        default=1800,
+        type=int,
+    )
 
     args = parser.parse_args()
     return args

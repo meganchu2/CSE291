@@ -1,5 +1,6 @@
 from datetime import datetime
 from difflib import SequenceMatcher
+from multiprocessing import Process, Queue
 import numpy as np
 import random
 
@@ -126,14 +127,8 @@ def verify(prog, examples):
     return execute_batch(prog, examples["in"]) == examples["out"]
 
 
-def genetic_programming(grammar, args, other_hps, examples):
+def gp_wrapper(grammar, args, other_hps, examples, population, queue):
     pop_size, num_selection, num_offspring = other_hps
-
-    t_start = datetime.now()
-    population = initialize_population(grammar, examples, pop_size, args.max_depth)
-    t_init = datetime.now()
-    logger.info(f"Initialization took {t_init - t_start}")
-
     result = []
     for gen in range(args.num_generation):
         logger.debug(f"Generation {gen + 1}")
@@ -147,11 +142,30 @@ def genetic_programming(grammar, args, other_hps, examples):
         scores = [fitness_all(examples["out"], execute_batch(p, examples["in"]), args.fitness) for p in population]
         indices = sorted(range(len(population)), key=lambda x: scores[x], reverse=True)[:pop_size]
         population = [population[i] for i in indices]
+    queue.put(result)
+
+
+def genetic_programming(grammar, args, other_hps, examples):
+    pop_size, num_selection, num_offspring = other_hps
+
+    t_start = datetime.now()
+    population = initialize_population(grammar, examples, pop_size, args.max_depth)
+    t_init = datetime.now()
+    logger.info(f"Initialization took {t_init - t_start}")
+
+    q = Queue()
+    p = Process(target=gp_wrapper, args=(grammar, args, other_hps, examples, population, q))
+    p.start()
+    p.join(args.timeout)
+    if p.is_alive():
+        logger.info("timeout")
+        p.terminate()
+        p.join()
 
     t_end = datetime.now()
     logger.info(f"GP took {t_end - t_init}")
     logger.info(f"Total time {t_end - t_start}")
-    return result
+    return [] if q.empty() else q.get()
 
 
 def levenshteinDistanceDP(token1, token2):
