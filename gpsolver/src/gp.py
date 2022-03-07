@@ -46,7 +46,7 @@ def select(programs, num_selection, examples, algorithm, metric):
 def breed(grammar, population, pop_size, args, examples):
     children = []
     if args.breed == "random":
-        for _ in range(pop_size):
+        for _ in range(int(pop_size)):
             parents = random.sample(population, 2)
             for i, p in enumerate(parents):
                 if random.uniform(0, 1) < args.mutation_prob:
