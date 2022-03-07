@@ -42,52 +42,14 @@ class Grammar:
             bme = sexp.parse_string(bm, parse_all=True).asList()[0]
         return bme[1][4]
 
-
-
-    def get_hyperparameters(self, constraints, experiment, selection):
+    def get_hyperparameters(self, constraints):
         types = len(self.all_rules)
         total = sum([len(self.all_rules[k]) for k in self.all_rules])
         term = sum([len(self.terminal_rules[k]) for k in self.terminal_rules])
-        func = total - term
+        funcs = total - term
         
-        max_arity = 0
-        for k in self.all_rules:
-            getMax = max([len(prod.rhs.children) if isinstance(prod.rhs, FuncNode) else 0 for prod in self.all_rules[k]])
-            if getMax > max_arity:
-                max_arity = getMax
-        
-        if experiment == 'min':
-            population_size = 100        
-        elif experiment == 'max':
-            population_size = 3000        
-        elif experiment == 'types': # exponents chosen to get population size within desired range
-            population_size = types**6        
-        elif experiment == 'arity':
-            population_size = arity**6            
-        elif experiment == 'func':
-            population_size = func**3            
-        elif experiment == 'term':
-            population_size = term**3            
-        elif experiment == 'mix':
-            population_size = types**5 + arity**5 + func**2 + term**2 
-        else: # explicit size given
-            population_size = int(experiment)    
-        
-        if population_size > 3000:
-            population_size = 3000
-            
-        if selection == 'min':
-            num_selection = 2        
-        elif selection == 'max':
-            num_selection = population_size        
-        elif selection == 'most':
-            num_selection = math.floor(population_size*.95)# 95% of population size
-        elif selection == 'best':
-            num_selection = math.floor(population_size*.05)# 5% of population size
-        else: # explicit percentage given
-            num_selection = math.floor(population_size*int(selection)/100)
-        
-        max_generation = 1 + math.floor(total/2) + math.floor(constraints/total)*2 # if many constraints then generations will increase
-        max_generation = max_generation*math.floor(3000/population_size/5) # if population_size is small, we need more generations        
-            
+        # the more funcs and types there are, the greater the (population_size, max_generation, num_selection)
+        population_size = types*5 + funcs**3 + term**2
+        max_generation = 1 + math.floor(total/2) + math.floor(constraints/total)*2 # if constraints >> then output depends more on constraints
+        num_selection = math.floor(population_size*9.5/10)# 95% of population size
         return (population_size, max_generation, num_selection)
