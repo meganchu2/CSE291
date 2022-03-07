@@ -1,4 +1,33 @@
-import sys
+Skip to content
+Search or jump to…
+Pull requests
+Issues
+Marketplace
+Explore
+ 
+@sharanmayank 
+meganchu2
+/
+CSE291
+Public
+Code
+Issues
+Pull requests
+Actions
+Projects
+1
+Wiki
+Security
+Insights
+CSE291/gpsolver/src/gp.py /
+@klivoth
+klivoth Fitness function in lexicase selection
+Latest commit 74b5205 22 minutes ago
+ History
+ 3 contributors
+@meganchu2@klivoth@sharanmayank
+451 lines (325 sloc)  14.1 KB
+   
 import copy
 import random
 import numpy as np
@@ -461,9 +490,8 @@ def levenshteinDistanceDP(token1, token2):
 
 if __name__ == '__main__':
 
-    benchmark_file = sys.argv[1]
-    print(benchmark_file)
-    # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
+
+    benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl"    # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl" # easy
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/univ_2.sl"
     # benchmark_file = "../benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2.sl"
