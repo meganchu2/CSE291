@@ -19,6 +19,7 @@ func_dict = {
     "-": lambda a, b: a - b,
     "+": lambda a, b: a + b,
     "ite": lambda a, b, c: b if a else c,
+    "=": lambda a, b: (a==b),
 }
 
 
