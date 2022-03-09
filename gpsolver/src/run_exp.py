@@ -155,7 +155,7 @@ def get_hyperparameters(grammar, args):
     )
     num_selection = math.floor(pop_size * args.selection_ratio)
     num_offspring = math.floor(pop_size * args.offspring_ratio)
-    return pop_size, num_selection, num_offspring
+    return 2000, num_selection, num_offspring
 
 
 def solve(bm, args):
