@@ -67,18 +67,8 @@ def parse_args():
         type=int,
     )
     parser.add_argument(
-        "--weight_productions",
-        default=8,
-        type=int,
-    )
-    parser.add_argument(
-        "--exp_functions",
-        default=1,
-        type=int,
-    )
-    parser.add_argument(
-        "--exp_max_arity",
-        default=1,
+        "--pop_size",
+        default=2000,
         type=int,
     )
     parser.add_argument(
@@ -146,16 +136,9 @@ def parse_benchmark(bm):
 
 
 def get_hyperparameters(grammar, args):
-    num_prod = len(grammar.all_rules)
-    all_rhs = [j.rhs for i in grammar.all_rules.values() for j in i]
-    num_func = sum([isinstance(i, FuncNode) for i in all_rhs])
-    max_arity = max([len(i.children) for i in all_rhs])
-    pop_size = math.floor(
-        num_prod * args.weight_productions * (num_func ** args.exp_functions) * (max_arity ** args.exp_max_arity)
-    )
-    num_selection = math.floor(pop_size * args.selection_ratio)
-    num_offspring = math.floor(pop_size * args.offspring_ratio)
-    return 2000, num_selection, num_offspring
+    num_selection = math.floor(args.pop_size * args.selection_ratio)
+    num_offspring = math.floor(args.pop_size * args.offspring_ratio)
+    return args.pop_size, num_selection, num_offspring
 
 
 def solve(bm, args):
