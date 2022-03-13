@@ -1,0 +1,132 @@
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/bikes-long.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 0 (- (str.len name) 3)))
+Time taken 0:01:04.563792
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/bikes-long.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/dr-name_small.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/dr-name_small.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/initials-long.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/initials-long.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/lastname_small.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/lastname_small.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-3-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-3-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-4_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-4_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-10-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-10-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-1_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 4 3))
+Time taken 0:00:03.194397
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-1_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-3-long-repeat.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.++ "(" (str.replace name "-" (str.++ ")" " "))))
+Time taken 0:26:04.044140
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-3-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-4_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.replace (str.replace name "-" ".") "-" "."))
+Time taken 0:05:25.279711
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-4_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-6-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-6-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-7_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-7_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-9-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-9-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 0 3))
+Time taken 0:00:00.406101
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_1-long-repeat.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((col1 String) (col2 String)) String
+     (str.++ (str.++ (str.++ col1 ",") " ") col2))
+Time taken 0:00:36.493011
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_1-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_2_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_2_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_4-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_4-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_5_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_5_short.sl
+====================
