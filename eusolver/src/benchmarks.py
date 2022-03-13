@@ -54,6 +54,8 @@ from enumerators import enumerators
 from exprs import exprtypes
 from semantics import semantics_core
 from core import grammars
+from datetime import datetime
+
 
 def get_pbe_valuations(constraints, synth_fun):
     valuations = []
@@ -411,8 +413,8 @@ def test_make_solver(benchmark_files):
         # print(benchmark_file)
         file_sexp = parser.sexpFromFile(benchmark_file)
 
-        for a in file_sexp:
-            print(a)
+        # for a in file_sexp:
+        #     print(a)
 
         # import cProfile, pstats
         # pr = cProfile.Profile()
@@ -441,6 +443,9 @@ def find_grammar_anamolies():
 
 if __name__ == "__main__":
     import sys
+    t0 = datetime.now()
     benchmark_files = sys.argv[1:]
     test_make_solver(benchmark_files)
+    t1 = datetime.now()
+    print("Time taken", t1 - t0)
     # find_grammar_anamolies()
