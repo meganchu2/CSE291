@@ -1,0 +1,156 @@
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/11440431.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/11440431.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/dr-name-long.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/dr-name-long.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 0 (str.indexof name " " 0)))
+Time taken 0:00:27.141921
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/firstname_small.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/lastname-long.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/lastname-long.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-2_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-4-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine-4-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((firstname String) (lastname String)) String
+     (str.++ (str.++ firstname " ") lastname))
+Time taken 0:00:03.235953
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/name-combine_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-1-long-repeat.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 4 3))
+Time taken 0:00:32.046988
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-1-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-2_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name (+ 5 3) 3))
+Time taken 0:00:15.670391
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-2_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-4-long-repeat.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.replace (str.replace name "-" ".") "-" "."))
+Time taken 0:10:24.743071
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-4-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-5_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-5_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-7-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-7-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-8_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name (- (str.len name) 3) 3))
+Time taken 0:04:06.605641
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-8_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-long-repeat.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((name String)) String
+     (str.substr name 0 3))
+Time taken 0:00:04.597751
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/phone-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/reverse-name_short.sl
+Trying solver: LIA Unification
+[ERROR]: UnsuitableSolverException LIA Unification Solver: Not LIA theory
+Trying solver: STD Unification
+[ERROR]: UnsuitableSolverException DT Unification Solver: Unable to decompose grammar
+Trying solver: Classic Esolver
+generator raised StopIteration
+Trying solver: Memoryless Esolver
+(define-fun f ((firstname String) (lastname String)) String
+     (str.++ (str.++ lastname " ") firstname))
+Time taken 0:00:03.068313
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/reverse-name_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_2-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_2-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_3_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_3_short.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_5-long-repeat.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_5-long-repeat.sl
+====================
+====================
+START BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_6_short.sl
+END BENCHMARK: benchmarks-master/comp/2018/PBE_Strings_Track/univ_6_short.sl
+====================

@@ -1,13 +1,10 @@
 import random
 from copy import copy, deepcopy
-from typing import List, Optional
 
-from grammar import Grammar
-from program import NTNode, Node, is_terminal, print_ast
+from program import is_terminal
 
-MAX_DEPTH = 4
 
-def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
+def expand(root, g, max_depth):
     node = root
     queue = [root]
     while queue:
@@ -24,32 +21,38 @@ def expand(root: NTNode, g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
         return generate_program(g, max_depth)
     return node
 
-def get_nodes(root: Node) -> List[Node]:
+
+def get_nodes(root):
     return root.children + [n for c in root.children for n in get_nodes(c)]
 
-def get_revertible_nodes(root: Node) -> List[Node]:
+
+def get_revertible_nodes(root):
     return [x for x in root.children if x.revert] + [n for c in root.children for n in get_nodes(c) if n.revert]
 
-def get_same_type_nodes(root: Node, expr_type: str) -> List[Node]:
+
+def get_same_type_nodes(root, expr_type):
     return [x for x in root.children if x.expr_type == expr_type] + [n for c in root.children for n in get_nodes(c) if n.expr_type == expr_type]
 
-def generate_program(g: Grammar, max_depth: int = MAX_DEPTH) -> Node:
+
+def generate_program(g, max_depth):
     assert max_depth > 0
     root = copy(g.start)
     return expand(root, g, max_depth)
 
-def mutate(program: Node, g: Grammar) -> Optional[Node]:
+
+def mutate(program, g, max_depth):
     new_program = deepcopy(program)
     nodes = get_revertible_nodes(new_program)
     if not nodes:
         return None
     new_node = random.choice(nodes).revert
-    new_node = expand(new_node, g)
+    new_node = expand(new_node, g, max_depth)
     if new_node.parent:
         new_node.parent.children[int(new_node.id[-1])] = new_node
     return new_program
 
-def crossover(parents: List[Node]) -> Optional[Node]:
+
+def crossover(parents):
     new_program = deepcopy(parents[0])
     new_program2 = deepcopy(parents[1])
     nodes = get_nodes(new_program)

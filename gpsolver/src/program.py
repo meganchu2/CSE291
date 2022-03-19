@@ -1,15 +1,36 @@
 from __future__ import annotations
 from copy import deepcopy
-from typing import Any
+
+from utils import logger
+
+
+func_dict = {
+    "str.++": lambda a, b: a + b,
+    "str.replace": lambda a, b, c: str.replace(a, b, c, 1),
+    "str.at": lambda a, b: a[b] if 0 <= b < len(a) else "",
+    "int.to.str": lambda a: str(a) if a >= 0 else "",
+    "str.substr": lambda a, b, c: a[b:(c+b)] if 0 <= b and len(a) >= (c + b) >= b else "",
+    "str.len": lambda a: len(a),
+    "str.to.int": lambda a: int(a) if a.isnumeric() else -1,
+    "str.indexof": lambda a, b, c: str.find(a, b, c),
+    "str.prefixof": lambda a, b: str.startswith(a, b),
+    "str.suffixof": lambda a, b: str.endswith(a, b),
+    "str.contains": lambda a, b: str.find(a, b) != -1,
+    "-": lambda a, b: a - b,
+    "+": lambda a, b: a + b,
+    "ite": lambda a, b, c: b if a else c,
+    "=": lambda a, b: (a==b),
+}
 
 
 class Production:
-    def __init__(self, lhs: NTNode, rhs: Node) -> None:
+    def __init__(self, lhs, rhs):
         self.lhs = lhs
         self.rhs = rhs
 
+
 class Node:
-    def __init__(self, expr_type: str) -> None:
+    def __init__(self, expr_type):
         self.parent = None
         self.children = []
         self.node_type = 0
@@ -18,13 +39,24 @@ class Node:
         self.id = "0"
         self.revert = None
 
-    def __eq__(self, o: object) -> bool:
+
+    def __eq__(self, o):
         return isinstance(o, Node) and self.expr_type == o.expr_type
 
-    def to_dict(self) -> dict[str, Any]:
+
+    def is_ground(self):
+        if isinstance(self, NTNode):
+            return False
+        if isinstance(self, FuncNode):
+            return all([c.is_ground for c in self.children])
+        return True
+
+
+    def to_dict(self):
         return {"node_type": self.node_type, "expr_type": self.expr_type, "depth": self.depth, "id": self.id}
 
-    def apply(self, rule: Production) -> Node:
+
+    def apply(self, rule):
         assert self.__eq__(rule.lhs)
         new = deepcopy(rule.rhs)
         new.id = self.id
@@ -39,97 +71,124 @@ class Node:
             self.parent.children[int(self.id[-1])] = new
         return new
 
-    def get_name(self) -> str:
+
+    def get_name(self):
         return ""
 
+
+    def size(self):
+        return 1 + sum([c.size() for c in self.children])
+
+
 class VarNode(Node):
-    def __init__(self, var_name: str, expr_type: str) -> None:
+    def __init__(self, var_name, expr_type):
         super().__init__(expr_type)
         self.node_type = 1
         self.name = var_name
 
-    def __eq__(self, o: object) -> bool:
+
+    def __eq__(self, o):
         return super().__eq__(o) and isinstance(o, VarNode) and self.name == o.name
 
-    def __hash__(self) -> int:
+
+    def __hash__(self):
         return hash(str(self.to_dict()))
 
-    def to_dict(self) -> dict[str, Any]:
+
+    def to_dict(self):
         d = super().to_dict()
         d["name"] = self.name
         return d
 
-    def get_name(self) -> str:
+
+    def get_name(self):
         return self.name
 
+
 class ConstNode(Node):
-    def __init__(self, expr_type: str, value: Any) -> None:
+    def __init__(self, expr_type, value):
         super().__init__(expr_type)
         self.node_type = 2
         self.value = value
 
-    def __eq__(self, o: object) -> bool:
+
+    def __eq__(self, o):
         return super().__eq__(o) and isinstance(o, ConstNode) and self.value == o.value
 
-    def __hash__(self) -> int:
+
+    def __hash__(self):
         return hash(str(self.to_dict()))
 
-    def to_dict(self) -> dict[str, str]:
+
+    def to_dict(self):
         d = super().to_dict()
         d["value"] = self.value
         return d
 
-    def get_name(self) -> str:
+
+    def get_name(self):
         return str(self.value)
 
+
 class FuncNode(Node):
-    def __init__(self, func_name: str, expr_type: str) -> None:
+    def __init__(self, func_name, expr_type):
         super().__init__(expr_type)
         self.node_type = 3
         self.func_name = func_name
 
-    def __eq__(self, o: object) -> bool:
+
+    def __eq__(self, o):
         return super().__eq__(o) and isinstance(o, FuncNode) and self.func_name == o.func_name
 
-    def __hash__(self) -> int:
+
+    def __hash__(self):
         return hash(str(self.to_dict()))
 
-    def to_dict(self) -> dict[str, str]:
+
+    def to_dict(self):
         d = super().to_dict()
         d["func_name"] = self.func_name
         return d
 
-    def get_name(self) -> str:
+
+    def get_name(self):
         return self.func_name
 
+
 class NTNode(Node): # non-terminal
-    def __init__(self, nt_name: str, expr_type: str) -> None:
+    def __init__(self, nt_name, expr_type):
         super().__init__(expr_type)
         self.node_type = 4
         self.nt_name = nt_name
 
-    def __eq__(self, o: object) -> bool:
+
+    def __eq__(self, o):
         return super().__eq__(o) and isinstance(o, NTNode) and self.nt_name == o.nt_name
 
-    def __hash__(self) -> int:
+
+    def __hash__(self):
         return hash(str(self.to_dict()))
 
-    def to_dict(self) -> dict[str, str]:
+
+    def to_dict(self):
         d = super().to_dict()
         d["nt_name"] = self.nt_name
         return d
 
-    def get_name(self) -> str:
+
+    def get_name(self):
         return self.nt_name
 
-def is_terminal(n: Node) -> bool:
+
+def is_terminal(n: Node):
     if isinstance(n, NTNode):
         return False
     if isinstance(n, FuncNode):
         return all([is_terminal(c) for c in n.children])
     return True
 
-def print_ast(n: Node) -> str:
+
+def print_ast(n: Node):
     if isinstance(n, ConstNode):
         if n.value == "":
             return "\'\'"
@@ -142,9 +201,31 @@ def print_ast(n: Node) -> str:
         s += ")"
         return s
     return n.get_name()
-    
-def count_nodes(n: Node) -> int:
-    if len(n.children) == 0:
-        return 1 # count self
-    else:
-        return 1 + sum([count_nodes(child) for child in n.children])
+
+
+def execute(prog, var_dict):
+    assert prog.is_ground()
+    child_progs = [execute(child, var_dict) for child in prog.children]
+    if isinstance(prog, ConstNode):
+        return prog.value
+    elif isinstance(prog, VarNode):
+        return var_dict[prog.name]
+    elif isinstance(prog, FuncNode):
+        fn = func_dict.get(prog.func_name)
+        if fn is None:
+            logger.info(f"Unknown function: {prog.to_dict()}")
+            return None
+        return fn(*child_progs)
+    return None
+
+
+def execute_batch(prog, ins):
+    outs = []
+    for i in ins:
+        try:
+            o = execute(prog, i)
+        except Exception:
+            logger.debug("Program is faulty")
+            o = "<error>"
+        outs.append(o)
+    return outs
